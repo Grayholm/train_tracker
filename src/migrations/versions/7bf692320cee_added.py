@@ -1,8 +1,8 @@
-"""initial
+"""added
 
-Revision ID: d6024864acac
+Revision ID: 7bf692320cee
 Revises:
-Create Date: 2025-11-03 10:55:19.739327
+Create Date: 2025-11-03 11:18:04.075901
 
 """
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "d6024864acac"
+revision: str = "7bf692320cee"
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -65,6 +65,9 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("workout_id", sa.Integer(), nullable=False),
         sa.Column("exercise_id", sa.Integer(), nullable=False),
+        sa.Column("sets", sa.Integer(), nullable=False),
+        sa.Column("reps", sa.Integer(), nullable=False),
+        sa.Column("weight", sa.Float(), nullable=False),
         sa.ForeignKeyConstraint(
             ["exercise_id"],
             ["exercises.id"],

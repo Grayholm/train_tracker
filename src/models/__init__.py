@@ -1,3 +1,3 @@
-from src.models.exercises import ExerciseModel
-from src.models.workouts import WorkoutModel, WorkoutExerciseModel
-from src.models.users import UserModel
+from src.models.exercises import ExercisesModel
+from src.models.workouts import WorkoutsModel, WorkoutExerciseModel
+from src.models.users import UsersModel

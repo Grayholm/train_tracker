@@ -27,3 +27,6 @@ class WorkoutExerciseModel(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     workout_id: Mapped[int] = mapped_column(ForeignKey("workouts.id"))
     exercise_id: Mapped[int] = mapped_column(ForeignKey("exercises.id"))
+    sets: Mapped[int]
+    reps: Mapped[int]
+    weight: Mapped[float]
