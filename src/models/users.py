@@ -5,7 +5,7 @@ from src.core.db import Base
 from src.schemas.users import Roles
 
 
-class UserModel(Base):
+class UsersModel(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)

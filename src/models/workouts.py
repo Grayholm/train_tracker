@@ -7,16 +7,16 @@ from sqlalchemy.orm import mapped_column, Mapped, relationship
 from src.core.db import Base
 
 if typing.TYPE_CHECKING:
-    from src.models.exercises import ExerciseModel
+    from src.models.exercises import ExercisesModel
 
 
-class WorkoutModel(Base):
+class WorkoutsModel(Base):
     __tablename__ = 'workouts'
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     date: Mapped[date]
     description: Mapped[str] = mapped_column(String(500))
-    exercises: Mapped[list["ExerciseModel"]] = relationship(
+    exercises: Mapped[list["ExercisesModel"]] = relationship(
         back_populates="workouts",
         secondary="workout_exercises",
     )
