@@ -12,3 +12,12 @@ class BaseServiceError(ValueError):
 
 class ValidationServiceError(BaseServiceError):
     detail = "Validation error"
+
+class EmailIsAlreadyRegisteredException(BaseException):
+    detail = "Email is already registered"
+
+class RegisterErrorException(BaseException):
+    detail = "Register error"
+
+class LoginErrorException(BaseException):
+    detail = "Login error"

@@ -10,5 +10,5 @@ class UsersModel(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     email: Mapped[str] = mapped_column(String, unique=True)
-    password: Mapped[str] = mapped_column(String)
+    hashed_password: Mapped[str] = mapped_column(String)
     role: Mapped[Roles] = mapped_column(Enum(Roles))
