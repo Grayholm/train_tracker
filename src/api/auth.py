@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends
+from jwt import ExpiredSignatureError
 from starlette.requests import Request
 from starlette.responses import Response
 
-from src.api.dependency import DBDep, UserIdDep
+from src.api.dependency import DBDep, UserDep
 from src.exceptions import (
     EmailIsAlreadyRegisteredException,
     RegisterErrorException,
@@ -48,16 +49,20 @@ async def login_user(data: UserRequest, response: Response, db: DBDep):
     summary="👨‍💻 Мой профиль",
     description="Получить мой профиль",
 )
-async def get_me(user_id: UserIdDep, db: DBDep):
+async def get_me(user: UserDep, db: DBDep):
+    user_id = user["user_id"]
     user = await AuthService(db).get_one_or_none_user(user_id)
     return user
 
 
 async def get_current_user(request: Request):
-    access_token = request.cookies.get("access_token")
-    if not access_token:
-        raise HTTPException(status_code=401, detail="Не авторизован")
-    return AuthService().decode_token(access_token)
+    try:
+        access_token = request.cookies.get("access_token")
+        if not access_token:
+            raise HTTPException(status_code=401, detail="Не авторизован")
+        return AuthService().decode_token(access_token)
+    except ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Токен просрочен")
 
 
 @router.post(

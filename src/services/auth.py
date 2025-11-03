@@ -85,7 +85,7 @@ class AuthService(BaseService):
             logging.warning(f"Неверная почта или пароль для пользователя {data.email}")
             raise LoginErrorException
 
-        token = self.create_access_token({"user_id": user.id})
+        token = self.create_access_token({"user_id": user.id, "user_role": user.role.value})
 
         logging.info(f"Login successful: {data.email}, user_id={user.id}")
         return token

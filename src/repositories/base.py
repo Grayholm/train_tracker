@@ -19,7 +19,8 @@ class BaseRepository:
     async def get_filtered(self, *filter, **filters):
         query = select(self.model).filter(*filter).filter_by(**filters)
         result = await self.session.execute(query)
-        return [self.mapper.map_to_domain_entity(model) for model in result.scalars().all()]
+        data = result.scalars().all()
+        return [self.mapper.map_to_domain_entity(model) for model in data]
 
     async def get_all(self):
         return await self.get_filtered()

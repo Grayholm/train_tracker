@@ -5,6 +5,7 @@ from starlette.requests import Request
 
 from src.core.db import async_session_maker
 from src.core.db_manager import DBManager
+from src.schemas.users import Roles
 from src.services.auth import AuthService
 
 
@@ -24,9 +25,19 @@ def get_token(request: Request) -> str:
     return access_token
 
 
-def get_current_user_id(token=Depends(get_token)) -> int:
+def get_current_user(token=Depends(get_token)) -> dict:
     data = AuthService().decode_token(token)
-    return data["user_id"]
+    data = {
+        "user_id": data["user_id"],
+        "user_role": data["user_role"],
+    }
+    return data
 
 
-UserIdDep: type[int] = Annotated[int, Depends(get_current_user_id)]
+UserDep: type[dict] = Annotated[dict, Depends(get_current_user)]
+
+
+def check_is_admin(user: UserDep) -> bool:
+    role_value = user["user_role"]
+    result = role_value == Roles.ADMIN.value
+    return result
