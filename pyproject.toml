@@ -9,6 +9,12 @@ readme = "README.md"
 python = "^3.13"
 fastapi = "^0.120.3"
 sqlalchemy = "^2.0.44"
+alembic = "^1.17.1"
+pydantic = {extras = ["email"], version = "^2.12.3"}
+pydantic-settings = "^2.11.0"
+psycopg2 = "^2.9.11"
+asyncpg = "^0.30.0"
+black = "^25.9.0"
 
 
 [build-system]
