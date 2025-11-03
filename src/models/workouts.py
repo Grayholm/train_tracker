@@ -11,7 +11,7 @@ if typing.TYPE_CHECKING:
 
 
 class WorkoutsModel(Base):
-    __tablename__ = 'workouts'
+    __tablename__ = "workouts"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     date: Mapped[date]
@@ -21,8 +21,9 @@ class WorkoutsModel(Base):
         secondary="workout_exercises",
     )
 
+
 class WorkoutExerciseModel(Base):
-    __tablename__ = 'workout_exercises'
+    __tablename__ = "workout_exercises"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     workout_id: Mapped[int] = mapped_column(ForeignKey("workouts.id"))

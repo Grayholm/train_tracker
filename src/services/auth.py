@@ -7,7 +7,11 @@ from passlib.context import CryptContext
 from sqlalchemy.exc import NoResultFound
 
 from src.core.config import settings
-from src.exceptions import ObjectNotFoundException, EmailIsAlreadyRegisteredException, LoginErrorException
+from src.exceptions import (
+    ObjectNotFoundException,
+    EmailIsAlreadyRegisteredException,
+    LoginErrorException,
+)
 from src.schemas.users import UserRequest, UserAdd, Roles
 from src.services.base import BaseService
 
@@ -57,9 +61,7 @@ class AuthService(BaseService):
         logging.info(f"Начинаем регистрацию пользователя с почтой: {data.email}")
 
         new_user = UserAdd(
-            email=data.email,
-            hashed_password=self.hash_password(data.password),
-            role=Roles.USER
+            email=data.email, hashed_password=self.hash_password(data.password), role=Roles.USER
         )
 
         try:

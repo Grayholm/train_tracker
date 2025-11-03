@@ -11,8 +11,10 @@ class WorkoutRequest(BaseModel):
     description: str
     exercises: List[Exercise]
 
+
 class WorkoutAdd(WorkoutRequest):
     user_id: int
+
 
 class Workout(WorkoutAdd):
     id: int

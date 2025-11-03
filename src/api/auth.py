@@ -3,7 +3,11 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from src.api.dependency import DBDep, UserIdDep
-from src.exceptions import EmailIsAlreadyRegisteredException, RegisterErrorException, LoginErrorException
+from src.exceptions import (
+    EmailIsAlreadyRegisteredException,
+    RegisterErrorException,
+    LoginErrorException,
+)
 from src.schemas.users import UserRequest
 from src.services.auth import AuthService
 
@@ -12,8 +16,8 @@ router = APIRouter(prefix="/auth", tags=["Аутентификация и авт
 
 @router.post(
     "/register",
-    summary='Регистрация',
-    description='Регистрация пользователя',
+    summary="Регистрация",
+    description="Регистрация пользователя",
 )
 async def register_user(db: DBDep, data: UserRequest):
     try:
@@ -27,8 +31,8 @@ async def register_user(db: DBDep, data: UserRequest):
 
 @router.post(
     "/login",
-    summary='Аутентификация',
-    description='Аутентификация пользователя',
+    summary="Аутентификация",
+    description="Аутентификация пользователя",
 )
 async def login_user(data: UserRequest, response: Response, db: DBDep):
     try:
@@ -41,12 +45,13 @@ async def login_user(data: UserRequest, response: Response, db: DBDep):
 
 @router.get(
     "/me",
-    summary='👨‍💻 Мой профиль',
-    description='Получить мой профиль',
+    summary="👨‍💻 Мой профиль",
+    description="Получить мой профиль",
 )
 async def get_me(user_id: UserIdDep, db: DBDep):
     user = await AuthService(db).get_one_or_none_user(user_id)
     return user
+
 
 async def get_current_user(request: Request):
     access_token = request.cookies.get("access_token")
@@ -57,7 +62,7 @@ async def get_current_user(request: Request):
 
 @router.post(
     "/logout",
-    summary='Выйти из системы',
+    summary="Выйти из системы",
 )
 async def logout(response: Response, current_user=Depends(get_current_user)):
     response.delete_cookie("access_token")

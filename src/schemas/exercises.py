@@ -14,10 +14,12 @@ class Category(Enum):
     CARDIO = "cardio"
     STRETCHING = "stretching"
 
+
 class ExerciseAdd(BaseModel):
     name: str
     description: Optional[str] = None
     category: Category
+
 
 class Exercise(ExerciseAdd):
     id: int

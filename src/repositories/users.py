@@ -6,4 +6,3 @@ from src.repositories.mappers.mappers import UserDataMapper
 class UsersRepository(BaseRepository):
     model = UsersModel
     mapper = UserDataMapper
-

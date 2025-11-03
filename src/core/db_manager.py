@@ -1,3 +1,5 @@
+from typing import Optional
+
 from src.repositories.exercises import ExercisesRepository
 from src.repositories.users import UsersRepository
 from src.repositories.workouts import WorkoutsRepository

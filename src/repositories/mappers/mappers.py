@@ -11,9 +11,11 @@ class UserDataMapper(DataMapper):
     db_model = UsersModel
     schema = User
 
+
 class ExerciseDataMapper(DataMapper):
     db_model = ExercisesModel
     schema = Exercise
+
 
 class WorkoutDataMapper(DataMapper):
     db_model = WorkoutsModel
