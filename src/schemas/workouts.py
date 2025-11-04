@@ -1,5 +1,5 @@
 from datetime import date
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -18,3 +18,9 @@ class WorkoutAdd(WorkoutRequest):
 
 class Workout(WorkoutAdd):
     id: int
+
+
+class WorkoutUpdate(BaseModel):
+    date: Optional[date] = None
+    description: Optional[str] = None
+    exercises: Optional[List[Exercise]] = None

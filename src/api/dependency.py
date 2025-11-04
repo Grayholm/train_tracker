@@ -37,7 +37,9 @@ def get_current_user(token=Depends(get_token)) -> dict:
 UserDep: type[dict] = Annotated[dict, Depends(get_current_user)]
 
 
-def check_is_admin(user: UserDep) -> bool:
+def check_is_admin(user: UserDep):
     role_value = user["user_role"]
-    result = role_value == Roles.ADMIN.value
-    return result
+    if role_value == Roles.ADMIN.value:
+        return True
+    else:
+        raise HTTPException(status_code=403, detail="Вы не админ")

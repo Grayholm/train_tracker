@@ -8,6 +8,8 @@ class BaseException(Exception):
 class ObjectNotFoundException(BaseException):
     detail = "Object Not Found"
 
+class ObjectAlreadyExistsException(BaseException):
+    detail = "Object Already Exists"
 
 class BaseServiceError(ValueError):
     detail = "Base Service Error"
