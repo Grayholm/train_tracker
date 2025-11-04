@@ -20,7 +20,7 @@ class ExerciseAdd(BaseModel):
     description: Optional[str] = None
     category: Category
 
-    @field_validator('category', mode='before')
+    @field_validator("category", mode="before")
     @classmethod
     def validate_category(cls, v):
         if isinstance(v, str):
