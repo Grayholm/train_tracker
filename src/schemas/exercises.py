@@ -40,6 +40,28 @@ class Exercise(ExerciseAdd):
     id: int
 
 
+class ExerciseBaseUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    category: Optional[Category] = None
+
+    @field_validator("name")
+    @classmethod
+    def not_empty(cls, v: str | None):
+        if v is None:
+            return v
+        if not v.strip():
+            raise ValueError("Поле не может быть пустым или содержать только пробелы")
+        return v
+
+class ExerciseUpdatePatch(ExerciseBaseUpdate):
+    pass
+
+class ExerciseUpdatePut(ExerciseBaseUpdate):
+    name: str
+    description: str
+    category: Category
+
 class ExerciseUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException
 
 from src.api.dependency import DBDep, UserDep, check_is_admin
-from src.exceptions import ObjectNotFoundException, ObjectAlreadyExistsException
-from src.schemas.exercises import ExerciseAdd, ExerciseUpdate
+from src.exceptions import ObjectNotFoundException, ObjectAlreadyExistsException, DataIsEmptyException
+from src.schemas.exercises import ExerciseAdd, ExerciseUpdate, ExerciseUpdatePut, ExerciseUpdatePatch
 from src.services.exercises import ExercisesService
 
 router = APIRouter(prefix="/exercises", tags=["Упражнения"])
@@ -54,12 +54,27 @@ async def delete_exercise(exercise_id: int, db: DBDep, user: UserDep):
 
 
 @router.put("/{exercise_id}", summary="Изменить все данные упражнения")
-async def update_exercise(exercise_id: int, exercise: ExerciseUpdate, db: DBDep, user: UserDep):
+async def update_exercise(exercise_id: int, exercise: ExerciseUpdatePut, db: DBDep, user: UserDep):
     check_is_admin(user)
 
+    try:
+        result = await ExercisesService(db).update_exercise(exercise_id, exercise)
+        return HTTPException(status_code=200, detail=result)
+    except DataIsEmptyException:
+        raise HTTPException(status_code=403, detail="Данные не могут быть пусты")
+    except ObjectNotFoundException:
+        raise HTTPException(status_code=404, detail="Объект не найден")
 
 @router.patch("/{exercise_id}", summary="Изменить часть данных упражнения")
 async def partially_update_exercise(
-    exercise_id: int, exercise: ExerciseUpdate, db: DBDep, user: UserDep
+    exercise_id: int, exercise: ExerciseUpdatePatch, db: DBDep, user: UserDep
 ):
     check_is_admin(user)
+
+    try:
+        result = await ExercisesService(db).partially_update_exercise(exercise_id, exercise)
+        return HTTPException(status_code=200, detail=result)
+    except DataIsEmptyException:
+        raise HTTPException(status_code=403, detail="Данные не могут быть пусты")
+    except ObjectNotFoundException:
+        raise HTTPException(status_code=404, detail="Объект не найден")

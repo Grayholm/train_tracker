@@ -1,7 +1,7 @@
 from sqlalchemy.exc import NoResultFound
 
-from src.exceptions import ObjectNotFoundException, ObjectAlreadyExistsException
-from src.schemas.exercises import ExerciseAdd
+from src.exceptions import ObjectNotFoundException, ObjectAlreadyExistsException, DataIsEmptyException
+from src.schemas.exercises import ExerciseAdd, ExerciseUpdate, ExerciseUpdatePut, ExerciseUpdatePatch
 from src.services.base import BaseService
 
 
@@ -37,3 +37,33 @@ class ExercisesService(BaseService):
             await self.db.commit()
         except ObjectNotFoundException:
             raise
+
+    async def update_exercise(self, exercise_id: int, exercise: ExerciseUpdatePut):
+        data_dict = exercise.model_dump(exclude_unset=True) if exercise else {}
+        if not data_dict:
+            return DataIsEmptyException("Отсутствуют данные для обновления")
+        try:
+            await self.get_exercise(exercise_id)
+        except ObjectNotFoundException:
+            raise
+
+        data = ExerciseUpdate(**data_dict)
+
+        result = await self.db.exercises.update(data, id=exercise_id)
+        await self.db.commit()
+        return result
+
+    async def partially_update_exercise(self, exercise_id: int, exercise: ExerciseUpdatePatch):
+        data_dict = exercise.model_dump(exclude_unset=True) if exercise else {}
+        if not data_dict:
+            return DataIsEmptyException("Отсутствуют данные для обновления")
+        try:
+            await self.get_exercise(exercise_id)
+        except ObjectNotFoundException:
+            raise
+
+        data = ExerciseUpdate(**data_dict)
+
+        result = await self.db.exercises.update(data, id=exercise_id)
+        await self.db.commit()
+        return result
