@@ -1,6 +1,6 @@
 from src.repositories.exercises import ExercisesRepository
 from src.repositories.users import UsersRepository
-from src.repositories.workouts import WorkoutsRepository
+from src.repositories.workouts import WorkoutsRepository, WorkoutExerciseRepository
 
 
 class DBManager:
@@ -13,6 +13,7 @@ class DBManager:
 
         self.users = UsersRepository(self.session)
         self.workouts = WorkoutsRepository(self.session)
+        self.workout_exercises = WorkoutExerciseRepository(self.session)
         self.exercises = ExercisesRepository(self.session)
 
         return self
