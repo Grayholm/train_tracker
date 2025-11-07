@@ -1,5 +1,4 @@
 import datetime as dt
-from datetime import date
 from typing import List, Optional
 
 from pydantic import BaseModel, field_validator
@@ -14,7 +13,7 @@ class ExerciseToAdd(BaseModel):
     weight: float
 
 class WorkoutRequest(BaseModel):
-    date: dt.date
+    date: dt.date = dt.date.today()
     description: str
     exercises: list[ExerciseToAdd]
 #-------------------------------------
@@ -30,7 +29,7 @@ class Workout(WorkoutAdd):
 class WorkoutBaseUpdate(BaseModel):
     date: dt.date = dt.date.today()
     description: Optional[str] = None
-    exercises: Optional[List[Exercise]] = None
+    exercises: Optional[List[ExerciseToAdd]] = None
 
     @field_validator("description")
     @classmethod
@@ -46,9 +45,8 @@ class WorkoutUpdatePatch(WorkoutBaseUpdate):
 
 class WorkoutUpdate(BaseModel):
     user_id: int
-    date: Optional[date] = None
+    date: Optional[dt.date] = None
     description: Optional[str] = None
-    exercises: Optional[List[Exercise]] = None
 
 
 class WorkoutExerciseAdd(BaseModel):

@@ -57,17 +57,30 @@ class WorkoutsService(BaseService):
         except ObjectNotFoundException:
             raise
 
-    async def partially_update_workout(self, workout_id: int, workout: WorkoutUpdatePatch):
+    async def partially_update_workout(self, user_id: int, workout_id: int, workout: WorkoutUpdatePatch):
         data_dict = workout.model_dump(exclude_unset=True) if workout else {}
         if not data_dict:
             return DataIsEmptyException("Отсутствуют данные для обновления")
         try:
-            await self.get_workout(workout_id)
+            existed = await self.get_workout(workout_id)
         except ObjectNotFoundException:
             raise
 
-        data = WorkoutUpdate(**data_dict)
+        data = WorkoutUpdate(
+            user_id=user_id,
+            date=workout.date,
+            description=workout.description,
+        )
 
         result = await self.db.workouts.update(data, id=workout_id)
+        for exercise_data in workout.exercises:
+            workout_exercise_data = WorkoutExerciseAdd(
+                workout_id=existed.id,
+                exercise_id=exercise_data.id,
+                sets=exercise_data.sets,
+                reps=exercise_data.reps,
+                weight=exercise_data.weight
+            )
+            await self.db.workout_exercises.add(workout_exercise_data)
         await self.db.commit()
         return result
