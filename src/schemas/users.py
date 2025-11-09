@@ -1,3 +1,4 @@
+import uuid
 from enum import Enum
 
 from pydantic import EmailStr, BaseModel
@@ -20,4 +21,4 @@ class UserAdd(BaseModel):
 
 
 class User(UserAdd):
-    id: int
+    id: uuid.UUID

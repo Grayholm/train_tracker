@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from jwt import ExpiredSignatureError
+from starlette import status
 from starlette.requests import Request
 from starlette.responses import Response
 
@@ -54,6 +55,10 @@ async def get_me(user: UserDep, db: DBDep):
     user = await AuthService(db).get_one_or_none_user(user_id)
     return user
 
+@router.get(path="/register_confirm", status_code=status.HTTP_200_OK)
+async def confirm_registration(token: str, db: DBDep) -> dict[str, str]:
+    await AuthService(db).confirm_user(token=token)
+    return {"message": "Электронная почта подтверждена"}
 
 async def get_current_user(request: Request):
     try:

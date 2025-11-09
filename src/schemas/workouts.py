@@ -1,13 +1,12 @@
 import datetime as dt
+import uuid
 from typing import List, Optional
 
 from pydantic import BaseModel, field_validator
 
-from src.schemas.exercises import Exercise
-
 #-------------------------------------
 class ExerciseToAdd(BaseModel):
-    id: int
+    id: uuid.UUID
     sets: int
     reps: int
     weight: float
@@ -19,12 +18,12 @@ class WorkoutRequest(BaseModel):
 #-------------------------------------
 
 class WorkoutAdd(BaseModel):
-    user_id: int
+    user_id: uuid.UUID
     date: dt.date
     description: str
 
 class Workout(WorkoutAdd):
-    id: int
+    id: uuid.UUID
 
 class WorkoutBaseUpdate(BaseModel):
     date: dt.date = dt.date.today()
@@ -44,14 +43,14 @@ class WorkoutUpdatePatch(WorkoutBaseUpdate):
     pass
 
 class WorkoutUpdate(BaseModel):
-    user_id: int
+    user_id: uuid.UUID
     date: Optional[dt.date] = None
     description: Optional[str] = None
 
 
 class WorkoutExerciseAdd(BaseModel):
-    workout_id: int
-    exercise_id: int
+    workout_id: uuid.UUID
+    exercise_id: uuid.UUID
     sets: int
     reps: int
     weight: float

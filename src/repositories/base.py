@@ -68,8 +68,13 @@ class BaseRepository:
         )
         await self.session.execute(add_data_stmt)
 
-    async def update(self, data: BaseModel, **filter):
-        update_data = data.model_dump(exclude_unset=True)
+    async def update(self, data, **filter):
+        if isinstance(data, BaseModel):
+            update_data = data.model_dump(exclude_unset=True)
+        elif isinstance(data, dict):
+            update_data = data
+        else:
+            raise TypeError("Data must be either Pydantic model or dictionary")
 
         update_stmt = (
             update(self.model).filter_by(**filter).values(**update_data).returning(self.model)

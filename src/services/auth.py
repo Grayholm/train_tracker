@@ -3,10 +3,12 @@ from datetime import datetime, timezone, timedelta
 
 import jwt
 from fastapi import HTTPException
+from itsdangerous import URLSafeTimedSerializer, BadSignature
 from passlib.context import CryptContext
 from sqlalchemy.exc import NoResultFound
 
 from src.core.config import settings
+from src.core.tasks import send_confirmation_email
 from src.exceptions import (
     ObjectNotFoundException,
     EmailIsAlreadyRegisteredException,
@@ -17,7 +19,10 @@ from src.services.base import BaseService
 
 
 class AuthService(BaseService):
-    pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
+        self.serializer = URLSafeTimedSerializer(settings.secret_key.get_secret_value())
 
     def create_access_token(self, data: dict) -> str:
         logging.debug("Create access token")
@@ -68,7 +73,9 @@ class AuthService(BaseService):
             await self.db.users.add(new_user)
             await self.db.commit()
             logging.info(f"Пользователь успешно зарегистрировался с почтой={new_user.email}")
-            return {"message": "Вы успешно зарегистрировались!"}
+            confirmation_token = self.serializer.dumps(data.email)
+            send_confirmation_email.delay(to_email=data.email, token=confirmation_token)
+            return {"message": "Вы успешно зарегистрировались! Проверьте почту, чтобы подтвердить свою учетную запись"}
         except ObjectNotFoundException:
             logging.warning(f"Пользователь ввел уже существующую почту, {new_user.email}")
             raise EmailIsAlreadyRegisteredException
@@ -92,3 +99,14 @@ class AuthService(BaseService):
 
     async def get_one_or_none_user(self, user_id: int):
         return await self.db.users.get_one_or_none(id=user_id)
+
+    async def confirm_user(self, token: str) -> None:
+        try:
+            email = self.serializer.loads(token, max_age=3600)
+        except BadSignature:
+            raise HTTPException(
+                status_code=400, detail="Неверный или просроченный токен"
+            )
+
+        await self.db.users.confirm_user(email=email)
+        await self.db.commit()

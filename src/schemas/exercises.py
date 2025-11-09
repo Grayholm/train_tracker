@@ -1,3 +1,4 @@
+import uuid
 from enum import Enum
 from typing import Optional
 
@@ -37,7 +38,7 @@ class ExerciseAdd(BaseModel):
 
 
 class Exercise(ExerciseAdd):
-    id: int
+    id: uuid.UUID
 
 
 class ExerciseBaseUpdate(BaseModel):
