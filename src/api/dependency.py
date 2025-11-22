@@ -29,6 +29,8 @@ def get_current_user(token=Depends(get_token)) -> dict:
     data = AuthService().decode_token(token)
     data = {
         "user_id": data["user_id"],
+        "user_email": data["user_email"],
+        "user_hashed_password": data["user_hashed_password"],
         "user_role": data["user_role"],
     }
     return data
