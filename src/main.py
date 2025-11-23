@@ -3,6 +3,7 @@ from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI
+from starlette.staticfiles import StaticFiles
 
 sys.path.append(str(Path(__file__).parent.parent))
 
@@ -11,6 +12,8 @@ from src.api.exercises import router as router_exercises
 from src.api.workouts import router as router_workouts
 
 app = FastAPI()
+
+app.mount("/static", StaticFiles(directory="src"), name="static")
 
 app.include_router(router_auth)
 app.include_router(router_exercises)

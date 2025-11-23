@@ -25,4 +25,4 @@ class ChangePasswordRequest(BaseModel):
 
 
 class User(UserAdd):
-    id: uuid.UUID
+    id: int

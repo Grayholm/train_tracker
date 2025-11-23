@@ -1,11 +1,12 @@
 import logging
+import os
 
 from fastapi import APIRouter, HTTPException, Depends
 from itsdangerous import BadSignature
 from jwt import ExpiredSignatureError
 from starlette import status
 from starlette.requests import Request
-from starlette.responses import Response
+from starlette.responses import Response, HTMLResponse, FileResponse
 
 from src.api.dependency import DBDep, UserDep, get_token, get_current_user
 from src.exceptions import (
@@ -59,25 +60,85 @@ async def get_me(user: UserDep, db: DBDep):
     user = await AuthService(db).get_one_or_none_user(user_id)
     return user
 
-@router.get(path="/register_confirm", status_code=status.HTTP_200_OK, include_in_schema=False)
-async def confirm_registration(db: DBDep, token: str) -> dict[str, str]:
+#####ДЛЯ ТАСКА СЕЛЬДЕРЕЙ#####
+@router.get(
+    path="/register_confirm",
+    status_code=status.HTTP_200_OK,
+    include_in_schema=False,
+    response_class=HTMLResponse
+)
+async def confirm_registration(db: DBDep, token: str) -> HTMLResponse:
     try:
         await AuthService(db).confirm_user(token=token)
-        return {"message": "Электронная почта подтверждена"}
+
+        html_content = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Email подтвержден!</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    text-align: center;
+                    padding: 50px;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                }
+                .container {
+                    background: rgba(255,255,255,0.1);
+                    padding: 30px;
+                    border-radius: 15px;
+                    backdrop-filter: blur(10px);
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>🎉 Email успешно подтвержден!</h1>
+                <p>Добро пожаловать! Наслаждайтесь:</p>
+
+                <video width="640" height="360" controls autoplay loop muted>
+                    <source src="/static/NGGYU/secret.mp4" type="video/mp4">
+                    Ваш браузер не поддерживает видео.
+                </video>
+
+            </div>
+        </body>
+        </html>
+        """
+        return HTMLResponse(content=html_content)
+
     except BadSignature:
-        raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Неверный или просроченный токен"
-            )
+        error_html = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Ошибка подтверждения</title>
+            <style>body { font-family: Arial; text-align: center; padding: 50px; }</style>
+        </head>
+        <body>
+            <h1 style="color: red;">❌ Ошибка подтверждения</h1>
+            <p>Неверный или просроченный токен</p>
+            <p><a href="/">Вернуться на главную</a></p>
+        </body>
+        </html>
+        """
+        return HTMLResponse(content=error_html, status_code=400)
+#####ДЛЯ ТАСКА СЕЛЬДЕРЕЙ#####
 
 async def get_current_user_for_logout(request: Request):
+    access_token = request.cookies.get("access_token")
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Не авторизован")
+
     try:
-        access_token = request.cookies.get("access_token")
-        if not access_token:
-            raise HTTPException(status_code=401, detail="Не авторизован")
         return AuthService().decode_token(access_token)
     except ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Токен просрочен")
+        # Разрешаем выход даже с просроченным токеном
+        return {"user_id": None, "expired": True}
+    except Exception:
+        # Разрешаем выход даже с невалидным токеном
+        return {"user_id": None, "invalid": True}
 
 
 @router.post(
@@ -85,10 +146,14 @@ async def get_current_user_for_logout(request: Request):
     summary="Выйти из системы",
 )
 async def logout(db: DBDep, response: Response, current_user=Depends(get_current_user_for_logout)):
-    user_id = current_user["user_id"]
+    user_id = current_user.get("user_id")
     response.delete_cookie("access_token")
-    await AuthService(db).logout(user_id)
-    return {"status": "Вы вышли из системы"}
+
+    if user_id:
+        await AuthService(db).logout(user_id)
+        return {"status": "Вы вышли из системы"}
+    else:
+        return {"status": "Сессия завершена"}
 
 
 @router.patch(

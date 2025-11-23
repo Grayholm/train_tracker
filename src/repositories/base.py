@@ -88,6 +88,8 @@ class BaseRepository:
             raise ObjectNotFoundException
         except ValidationError:
             raise ValidationServiceError
+        except IntegrityError:
+            raise
 
         return edited
 

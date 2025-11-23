@@ -6,7 +6,7 @@ from pydantic import BaseModel, field_validator
 
 #-------------------------------------
 class ExerciseToAdd(BaseModel):
-    id: uuid.UUID
+    id: int
     sets: int
     reps: int
     weight: float
@@ -18,12 +18,12 @@ class WorkoutRequest(BaseModel):
 #-------------------------------------
 
 class WorkoutAdd(BaseModel):
-    user_id: uuid.UUID
+    user_id: int
     date: dt.date
     description: str
 
 class Workout(WorkoutAdd):
-    id: uuid.UUID
+    id: int
 
 class WorkoutBaseUpdate(BaseModel):
     date: dt.date = dt.date.today()
@@ -43,14 +43,14 @@ class WorkoutUpdatePatch(WorkoutBaseUpdate):
     pass
 
 class WorkoutUpdate(BaseModel):
-    user_id: uuid.UUID
+    user_id: int
     date: Optional[dt.date] = None
     description: Optional[str] = None
 
 
 class WorkoutExerciseAdd(BaseModel):
-    workout_id: uuid.UUID
-    exercise_id: uuid.UUID
+    workout_id: int
+    exercise_id: int
     sets: int
     reps: int
     weight: float

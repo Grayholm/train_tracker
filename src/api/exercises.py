@@ -1,8 +1,10 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
+from sqlalchemy.exc import IntegrityError
 
 from src.api.dependency import DBDep, UserDep, check_is_admin
 from src.exceptions import ObjectNotFoundException, ObjectAlreadyExistsException, DataIsEmptyException
-from src.schemas.exercises import ExerciseAdd, ExerciseUpdate, ExerciseUpdatePut, ExerciseUpdatePatch
+from src.schemas.exercises import ExerciseAdd, ExerciseUpdate, ExerciseUpdatePut, ExerciseUpdatePatch, Category, \
+    ExerciseAddRequest
 from src.services.exercises import ExercisesService
 
 router = APIRouter(prefix="/exercises", tags=["Упражнения"])
@@ -28,11 +30,19 @@ async def get_exercise(exercise_id: int, db: DBDep):
 
 
 @router.post("", summary="Добавить упражнение")
-async def add_exercise(exercise: ExerciseAdd, db: DBDep, user: UserDep):
+async def add_exercise(
+        db: DBDep,
+        user: UserDep,
+        exercise: ExerciseAddRequest,
+        category: Category = Query(..., description="Категория упражнения"),
+):
     check_is_admin(user)
 
+    exercise_data_dict = exercise.model_dump()
+    exercise_data_dict["category"] = category
+
     try:
-        created = await ExercisesService(db).add_exercise(exercise)
+        created = await ExercisesService(db).add_exercise(exercise_data_dict)
         return created
     except ObjectAlreadyExistsException:
         raise HTTPException(
@@ -54,27 +64,42 @@ async def delete_exercise(exercise_id: int, db: DBDep, user: UserDep):
 
 
 @router.put("/{exercise_id}", summary="Изменить все данные упражнения")
-async def update_exercise(exercise_id: int, exercise: ExerciseUpdatePut, db: DBDep, user: UserDep):
-    check_is_admin(user)
-
-    try:
-        result = await ExercisesService(db).update_exercise(exercise_id, exercise)
-        return HTTPException(status_code=200, detail=result)
-    except DataIsEmptyException:
-        raise HTTPException(status_code=403, detail="Данные не могут быть пусты")
-    except ObjectNotFoundException:
-        raise HTTPException(status_code=404, detail="Объект не найден")
-
-@router.patch("/{exercise_id}", summary="Изменить часть данных упражнения")
-async def partially_update_exercise(
-    exercise_id: int, exercise: ExerciseUpdatePatch, db: DBDep, user: UserDep
+async def update_exercise(
+        db: DBDep,
+        user: UserDep,
+        exercise_id: int,
+        exercise: ExerciseUpdatePut,
+        category: Category = Query(..., description="Категория упражнения"),
 ):
     check_is_admin(user)
 
+    exercise_data_dict = exercise.model_dump(exclude_unset=True)
+
     try:
-        result = await ExercisesService(db).partially_update_exercise(exercise_id, exercise)
-        return HTTPException(status_code=200, detail=result)
-    except DataIsEmptyException:
-        raise HTTPException(status_code=403, detail="Данные не могут быть пусты")
+        result = await ExercisesService(db).update_exercise(exercise_id, exercise_data_dict, category)
+        return result
+    except DataIsEmptyException as e:
+        raise HTTPException(status_code=403, detail=str(e))
     except ObjectNotFoundException:
         raise HTTPException(status_code=404, detail="Объект не найден")
+
+
+@router.patch("/{exercise_id}", summary="Изменить часть данных упражнения")
+async def partially_update_exercise(
+        db: DBDep,
+        user: UserDep,
+        exercise_id: int,
+        exercise: ExerciseUpdatePatch,
+        category: Category | None = Query(None, description="Категория упражнения"),
+):
+    check_is_admin(user)
+
+    exercise_data_dict = exercise.model_dump(exclude_unset=True)
+
+    try:
+        result = await ExercisesService(db).partially_update_exercise(exercise_id, exercise_data_dict, category)
+        return result
+    except ObjectNotFoundException:
+        raise HTTPException(status_code=404, detail="Объект не найден")
+    except DataIsEmptyException as e:
+        raise HTTPException(status_code=400, detail=str(e))

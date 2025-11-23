@@ -16,7 +16,7 @@ if typing.TYPE_CHECKING:
 class WorkoutsModel(IDMixin, TimestampsMixin, Base):
     __tablename__ = "workouts"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(Integer, ForeignKey("users.id"))
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))
     date: Mapped[date]
     description: Mapped[str] = mapped_column(String(500))
     exercises: Mapped[list["ExercisesModel"]] = relationship(
@@ -29,10 +29,10 @@ class WorkoutsModel(IDMixin, TimestampsMixin, Base):
 class WorkoutExerciseModel(IDMixin, TimestampsMixin, Base):
     __tablename__ = "workout_exercises"
 
-    workout_id: Mapped[uuid.UUID] = mapped_column(
+    workout_id: Mapped[int] = mapped_column(
         ForeignKey("workouts.id", ondelete="CASCADE")  # ← каскадное удаление
     )
-    exercise_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("exercises.id"))
+    exercise_id: Mapped[int] = mapped_column(ForeignKey("exercises.id"))
     sets: Mapped[int]
     reps: Mapped[int]
     weight: Mapped[float]

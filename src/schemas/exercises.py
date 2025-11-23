@@ -2,7 +2,7 @@ import uuid
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, Field
 
 
 class Category(Enum):
@@ -15,36 +15,23 @@ class Category(Enum):
     CARDIO = "cardio"
     STRETCHING = "stretching"
 
+class ExerciseAddRequest(BaseModel):
+    name: str
+    description: Optional[str] = None
 
 class ExerciseAdd(BaseModel):
     name: str
     description: Optional[str] = None
     category: Category
 
-    @field_validator("category", mode="before")
-    @classmethod
-    def validate_category(cls, v):
-        if isinstance(v, str):
-            v = v.lower().strip()
-
-        try:
-            return Category(v)
-        except ValueError:
-            available_categories = [e.value for e in Category]
-            raise ValueError(
-                f"Категория '{v}' не найдена. "
-                f"Доступные категории: {', '.join(available_categories)}"
-            )
-
 
 class Exercise(ExerciseAdd):
-    id: uuid.UUID
+    id: int
 
 
 class ExerciseBaseUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
-    category: Optional[Category] = None
 
     @field_validator("name")
     @classmethod
@@ -60,8 +47,8 @@ class ExerciseUpdatePatch(ExerciseBaseUpdate):
 
 class ExerciseUpdatePut(ExerciseBaseUpdate):
     name: str
-    description: str
-    category: Category
+    description: str = Field(min_length=6)
+
 
 class ExerciseUpdate(BaseModel):
     name: Optional[str] = None

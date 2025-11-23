@@ -6,7 +6,6 @@ from fastapi import HTTPException
 from itsdangerous import URLSafeTimedSerializer, BadSignature
 from passlib.context import CryptContext
 from pydantic import EmailStr
-from sqlalchemy.exc import NoResultFound
 
 from src.core.config import settings
 from src.core.tasks import send_confirmation_email
@@ -97,7 +96,7 @@ class AuthService(BaseService):
         await self.db.commit()
 
         token = self.create_access_token({
-            "user_id": str(user.id),
+            "user_id": user.id,
             "user_email": user.email,
             "user_hashed_password": user.hashed_password,
             "user_role": user.role.value
