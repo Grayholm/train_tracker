@@ -34,3 +34,6 @@ class LoginErrorException(BaseException):
 
 class DataIsEmptyException(BaseException):
     detail = "Data is empty"
+
+class AccessDeniedException(BaseException):
+    detail = "Access Denied"
