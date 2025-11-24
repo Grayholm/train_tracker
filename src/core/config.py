@@ -31,6 +31,13 @@ class Settings(BaseSettings):
     DB_PASS: str
     DB_NAME: str
 
+    REDIS_HOST: str
+    REDIS_PORT: int
+
+    @property
+    def redis_url(self) -> str:
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}"
+
     email_settings: EmailSettings = EmailSettings()
     redis_settings: RedisSettings = RedisSettings()
     secret_key: SecretStr

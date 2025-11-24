@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, Query
-from sqlalchemy.exc import IntegrityError
+from fastapi_cache.decorator import cache
 
 from src.api.dependency import DBDep, UserDep, check_is_admin
 from src.exceptions import ObjectNotFoundException, ObjectAlreadyExistsException, DataIsEmptyException
-from src.schemas.exercises import ExerciseAdd, ExerciseUpdate, ExerciseUpdatePut, ExerciseUpdatePatch, Category, \
+from src.schemas.exercises import ExerciseUpdatePut, ExerciseUpdatePatch, Category, \
     ExerciseAddRequest
 from src.services.exercises import ExercisesService
 
@@ -11,6 +11,7 @@ router = APIRouter(prefix="/exercises", tags=["Упражнения"])
 
 
 @router.get("", summary="Доступные упражнения")
+@cache(expire=3600)
 async def get_exercises(db: DBDep):
     exercises = await ExercisesService(db).get_exercises()
     return exercises

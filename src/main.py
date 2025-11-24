@@ -1,9 +1,15 @@
+import logging
 import sys
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
 from starlette.staticfiles import StaticFiles
+
+from src import redis_manager
 
 sys.path.append(str(Path(__file__).parent.parent))
 
@@ -15,6 +21,16 @@ app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="src"), name="static")
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await redis_manager.connect()
+    FastAPICache.init(RedisBackend(redis_manager.redis), prefix="fastapi-cache")
+    logging.info("FastAPI Cache connection initialized")
+    yield
+    await redis_manager.close()
+
+
+app = FastAPI(lifespan=lifespan)
 app.include_router(router_auth)
 app.include_router(router_exercises)
 app.include_router(router_workouts)
