@@ -9,17 +9,13 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from starlette.staticfiles import StaticFiles
 
-from src import redis_manager
-
 sys.path.append(str(Path(__file__).parent.parent))
 
+from src.core.redis_manager import redis_manager
 from src.api.auth import router as router_auth
 from src.api.exercises import router as router_exercises
 from src.api.workouts import router as router_workouts
 
-app = FastAPI()
-
-app.mount("/static", StaticFiles(directory="src"), name="static")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -31,9 +27,13 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+app.mount("/static", StaticFiles(directory="src"), name="static")
+
 app.include_router(router_auth)
 app.include_router(router_exercises)
 app.include_router(router_workouts)
 
+
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("src.main:app", host="0.0.0.0", port=8000, reload=True)

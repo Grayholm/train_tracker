@@ -1,0 +1,35 @@
+services:
+  training_celery_worker:
+    container_name: training_celery_worker
+    build:
+      context: .
+    networks:
+      - myNetwork
+    env_file:
+      - .env
+    command: celery --app=src.core.celery_config:celery_app worker -l INFO
+
+  training_celery_beat:
+    container_name: training_celery_beat
+    build:
+      context: .
+    networks:
+      - myNetwork
+    env_file:
+      - .env
+    command: celery --app=src.core.celery_config:celery_app beat -l INFO
+
+  training_back_service:
+    container_name: training_back
+    build:
+      context: .
+    networks:
+      - myNetwork
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+
+networks:
+  myNetwork:
+    external: true
