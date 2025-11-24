@@ -1,8 +1,11 @@
 from sqlalchemy.exc import NoResultFound, IntegrityError
 
-from src.exceptions import ObjectNotFoundException, ObjectAlreadyExistsException, DataIsEmptyException
-from src.schemas.exercises import ExerciseAdd, ExerciseUpdate, ExerciseUpdatePut, ExerciseUpdatePatch, \
-    ExerciseAddRequest, Category
+from src.exceptions import (
+    ObjectNotFoundException,
+    ObjectAlreadyExistsException,
+    DataIsEmptyException,
+)
+from src.schemas.exercises import ExerciseAdd, ExerciseUpdate, Category
 from src.services.base import BaseService
 
 
@@ -58,7 +61,9 @@ class ExercisesService(BaseService):
         except IntegrityError:
             raise DataIsEmptyException("Название для упражнения не должно быть пустым")
 
-    async def partially_update_exercise(self, exercise_id: int, data_dict: dict, category: Category):
+    async def partially_update_exercise(
+        self, exercise_id: int, data_dict: dict, category: Category
+    ):
         if category is not None:
             data_dict["category"] = category
 

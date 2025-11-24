@@ -21,6 +21,7 @@ class WorkoutDataMapper(DataMapper):
     db_model = WorkoutsModel
     schema = Workout
 
+
 class WorkoutExerciseDataMapper(DataMapper):
     db_model = WorkoutExerciseModel
     schema = WorkoutExercise

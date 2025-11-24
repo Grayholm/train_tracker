@@ -1,4 +1,3 @@
-import uuid
 from enum import Enum
 
 from pydantic import EmailStr, BaseModel, Field
@@ -18,6 +17,7 @@ class UserAdd(BaseModel):
     email: EmailStr
     hashed_password: str
     role: Roles = Roles.USER
+
 
 class ChangePasswordRequest(BaseModel):
     old_password: str = Field(min_length=6, max_length=64)

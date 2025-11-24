@@ -75,7 +75,9 @@ class AuthService(BaseService):
             logging.info(f"Пользователь успешно зарегистрировался с почтой={new_user.email}")
             confirmation_token = self.serializer.dumps(data.email)
             send_confirmation_email.delay(to_email=data.email, token=confirmation_token)
-            return {"message": "Вы успешно зарегистрировались! Проверьте почту, чтобы подтвердить свою учетную запись"}
+            return {
+                "message": "Вы успешно зарегистрировались! Проверьте почту, чтобы подтвердить свою учетную запись"
+            }
         except ObjectNotFoundException:
             logging.warning(f"Пользователь ввел уже существующую почту, {new_user.email}")
             raise EmailIsAlreadyRegisteredException
@@ -95,12 +97,14 @@ class AuthService(BaseService):
         await self.db.users.login_is_active(user.id)
         await self.db.commit()
 
-        token = self.create_access_token({
-            "user_id": user.id,
-            "user_email": user.email,
-            "user_hashed_password": user.hashed_password,
-            "user_role": user.role.value
-        })
+        token = self.create_access_token(
+            {
+                "user_id": user.id,
+                "user_email": user.email,
+                "user_hashed_password": user.hashed_password,
+                "user_role": user.role.value,
+            }
+        )
 
         logging.info(f"Login successful: {data.email}, user_id={user.id}")
         return token
@@ -131,15 +135,14 @@ class AuthService(BaseService):
 
         confirmation_token = self.serializer.dumps(new_email)
 
-        send_confirmation_email.delay(
-            to_email=new_email,
-            token=confirmation_token
-        )
+        send_confirmation_email.delay(to_email=new_email, token=confirmation_token)
 
         await self.db.users.change_email(new_email, old_email)
         await self.db.commit()
 
-    async def change_password(self, old_password: str, new_password: str, users_hashed_password: str, user_id: int):
+    async def change_password(
+        self, old_password: str, new_password: str, users_hashed_password: str, user_id: int
+    ):
         if not self.verify_password(old_password, users_hashed_password):
             raise ValueError("Неверный текущий пароль")
 

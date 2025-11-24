@@ -1,4 +1,3 @@
-import uuid
 from enum import Enum
 from typing import Optional
 
@@ -15,9 +14,11 @@ class Category(Enum):
     CARDIO = "cardio"
     STRETCHING = "stretching"
 
+
 class ExerciseAddRequest(BaseModel):
     name: str
     description: Optional[str] = None
+
 
 class ExerciseAdd(BaseModel):
     name: str
@@ -42,8 +43,10 @@ class ExerciseBaseUpdate(BaseModel):
             raise ValueError("Поле не может быть пустым или содержать только пробелы")
         return v
 
+
 class ExerciseUpdatePatch(ExerciseBaseUpdate):
     pass
+
 
 class ExerciseUpdatePut(ExerciseBaseUpdate):
     name: str

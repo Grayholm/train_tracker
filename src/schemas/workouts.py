@@ -4,26 +4,32 @@ from typing import List, Optional
 from pydantic import BaseModel, field_validator, Field
 
 
-#-------------------------------------
+# -------------------------------------
 class ExerciseToAdd(BaseModel):
     id: int
     sets: int = Field(gt=0)
     reps: int = Field(gt=0)
     weight: float = Field(gt=0)
 
+
 class WorkoutRequest(BaseModel):
     date: dt.date = dt.date.today()
     description: Optional[str] = None
     exercises: list[ExerciseToAdd]
-#-------------------------------------
+
+
+# -------------------------------------
+
 
 class WorkoutAdd(BaseModel):
     user_id: int
     date: dt.date
     description: Optional[str] = None
 
+
 class Workout(WorkoutAdd):
     id: int
+
 
 class WorkoutBaseUpdate(BaseModel):
     date: dt.date = dt.date.today()
@@ -39,8 +45,10 @@ class WorkoutBaseUpdate(BaseModel):
             raise ValueError("Поле не может быть пустым или содержать только пробелы")
         return v
 
+
 class WorkoutUpdatePatch(WorkoutBaseUpdate):
     pass
+
 
 class WorkoutUpdate(BaseModel):
     user_id: int
@@ -55,8 +63,10 @@ class WorkoutExerciseAdd(BaseModel):
     reps: int = Field(gt=0)
     weight: float = Field(gt=0)
 
+
 class WorkoutExercise(WorkoutExerciseAdd):
     pass
+
 
 class WorkoutToResponse(Workout):
     exercises: list[WorkoutExercise]

@@ -6,6 +6,7 @@ from src.core.config import settings
 
 templates = Jinja2Templates(directory=settings.templates_dir)
 
+
 @shared_task
 def send_confirmation_email(to_email: str, token: str) -> None:
     try:
@@ -13,8 +14,7 @@ def send_confirmation_email(to_email: str, token: str) -> None:
 
         template = templates.get_template("confirmation_email.html")
         html_content = template.render(
-            confirmation_url=confirmation_url,
-            frontend_url=settings.frontend_url
+            confirmation_url=confirmation_url, frontend_url=settings.frontend_url
         )
 
         message = EmailMessage()
@@ -23,15 +23,14 @@ def send_confirmation_email(to_email: str, token: str) -> None:
         message["To"] = to_email
         message["Subject"] = "Подтверждение регистрации"
 
-        #Для порта 587
+        # Для порта 587
         with smtplib.SMTP(
-            settings.email_settings.email_host,
-            settings.email_settings.email_port
+            settings.email_settings.email_host, settings.email_settings.email_port
         ) as smtp:
-            smtp.starttls()  #Включаем шифрование
+            smtp.starttls()  # Включаем шифрование
             smtp.login(
                 user=settings.email_settings.email_username,
-                password=settings.email_settings.email_password.get_secret_value()
+                password=settings.email_settings.email_password.get_secret_value(),
             )
             smtp.send_message(message)
 

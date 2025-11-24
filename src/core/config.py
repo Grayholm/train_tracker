@@ -12,6 +12,7 @@ class EmailSettings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf8", extra="ignore")
 
+
 class RedisSettings(BaseSettings):
     redis_host: str
     redis_port: int
@@ -22,6 +23,7 @@ class RedisSettings(BaseSettings):
     @property
     def redis_url(self):
         return f"redis://{self.redis_host}:{self.redis_port}/{self.redis_db}"
+
 
 class Settings(BaseSettings):
     MODE: Literal["TEST", "LOCAL", "DEV", "PROD"]

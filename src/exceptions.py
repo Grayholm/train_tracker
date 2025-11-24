@@ -32,8 +32,10 @@ class RegisterErrorException(BaseException):
 class LoginErrorException(BaseException):
     detail = "Login error"
 
+
 class DataIsEmptyException(BaseException):
     detail = "Data is empty"
+
 
 class AccessDeniedException(BaseException):
     detail = "Access Denied"

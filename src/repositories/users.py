@@ -1,6 +1,5 @@
 from pydantic import EmailStr
 from sqlalchemy import update
-from sqlalchemy.exc import IntegrityError
 
 from src.models.users import UsersModel
 from src.repositories.base import BaseRepository
@@ -29,24 +28,14 @@ class UsersRepository(BaseRepository):
 
     async def change_password(self, new_password: str, user_id: int) -> None:
         query = (
-            update(self.model)
-            .where(self.model.id == user_id)
-            .values(hashed_password=new_password)
+            update(self.model).where(self.model.id == user_id).values(hashed_password=new_password)
         )
         await self.session.execute(query)
 
     async def logout_is_active(self, user_id: int):
-        query = (
-            update(self.model)
-            .where(self.model.id == user_id)
-            .values(is_active=False)
-        )
+        query = update(self.model).where(self.model.id == user_id).values(is_active=False)
         await self.session.execute(query)
 
     async def login_is_active(self, user_id: int):
-        query = (
-            update(self.model)
-            .where(self.model.id == user_id)
-            .values(is_active=True)
-        )
+        query = update(self.model).where(self.model.id == user_id).values(is_active=True)
         await self.session.execute(query)

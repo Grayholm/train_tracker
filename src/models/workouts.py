@@ -1,5 +1,4 @@
 import typing
-import uuid
 from datetime import date
 
 from sqlalchemy import Integer, String, ForeignKey

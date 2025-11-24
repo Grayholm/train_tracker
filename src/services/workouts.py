@@ -1,9 +1,14 @@
 from sqlalchemy.exc import NoResultFound
 
-from src.exceptions import DataIsEmptyException, ObjectNotFoundException, \
-    AccessDeniedException
-from src.schemas.workouts import WorkoutUpdate, WorkoutUpdatePatch, WorkoutAdd, WorkoutRequest, WorkoutExerciseAdd, \
-    WorkoutToResponse
+from src.exceptions import DataIsEmptyException, ObjectNotFoundException, AccessDeniedException
+from src.schemas.workouts import (
+    WorkoutUpdate,
+    WorkoutUpdatePatch,
+    WorkoutAdd,
+    WorkoutRequest,
+    WorkoutExerciseAdd,
+    WorkoutToResponse,
+)
 from src.services.base import BaseService
 
 
@@ -21,7 +26,7 @@ class WorkoutsService(BaseService):
                 user_id=workout_data.user_id,
                 date=workout_data.date,
                 description=workout_data.description,
-                exercises=exercises_data
+                exercises=exercises_data,
             )
             return workout
         except NoResultFound:
@@ -47,7 +52,7 @@ class WorkoutsService(BaseService):
                 exercise_id=exercise_data.id,
                 sets=exercise_data.sets,
                 reps=exercise_data.reps,
-                weight=exercise_data.weight
+                weight=exercise_data.weight,
             )
             await self.db.workout_exercises.add(workout_exercise_data)
 
@@ -69,7 +74,7 @@ class WorkoutsService(BaseService):
                 exercise_id=exercise_data.id,
                 sets=exercise_data.sets,
                 reps=exercise_data.reps,
-                weight=exercise_data.weight
+                weight=exercise_data.weight,
             )
             await self.db.workout_exercises.add(workout_exercise_data)
 
@@ -85,7 +90,9 @@ class WorkoutsService(BaseService):
         except ObjectNotFoundException:
             raise
 
-    async def partially_update_workout(self, user_id: int, workout_id: int, workout: WorkoutUpdatePatch):
+    async def partially_update_workout(
+        self, user_id: int, workout_id: int, workout: WorkoutUpdatePatch
+    ):
         data_dict = workout.model_dump(exclude_unset=True) if workout else {}
         if not data_dict:
             return DataIsEmptyException("Отсутствуют данные для обновления")
@@ -107,7 +114,7 @@ class WorkoutsService(BaseService):
                 exercise_id=exercise_data.id,
                 sets=exercise_data.sets,
                 reps=exercise_data.reps,
-                weight=exercise_data.weight
+                weight=exercise_data.weight,
             )
             await self.db.workout_exercises.add(workout_exercise_data)
         await self.db.commit()

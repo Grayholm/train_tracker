@@ -1,6 +1,6 @@
 import typing
 
-from sqlalchemy import Integer, String, Enum
+from sqlalchemy import String, Enum
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from src.core.db import Base
