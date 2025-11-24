@@ -1,11 +1,9 @@
-import logging
-
 from sqlalchemy.exc import NoResultFound
 
-from src.exceptions import DataIsEmptyException, ObjectNotFoundException, ObjectAlreadyExistsException, \
+from src.exceptions import DataIsEmptyException, ObjectNotFoundException, \
     AccessDeniedException
-from src.schemas.exercises import Exercise
-from src.schemas.workouts import WorkoutUpdate, WorkoutUpdatePatch, WorkoutAdd, WorkoutRequest, WorkoutExerciseAdd
+from src.schemas.workouts import WorkoutUpdate, WorkoutUpdatePatch, WorkoutAdd, WorkoutRequest, WorkoutExerciseAdd, \
+    WorkoutToResponse
 from src.services.base import BaseService
 
 
@@ -16,7 +14,15 @@ class WorkoutsService(BaseService):
 
     async def get_workout(self, workout_id):
         try:
-            workout = await self.db.workouts.get_one(id=workout_id)
+            workout_data = await self.db.workouts.get_one(id=workout_id)
+            exercises_data = await self.db.workout_exercises.get_filtered(workout_id=workout_id)
+            workout = WorkoutToResponse(
+                id=workout_id,
+                user_id=workout_data.user_id,
+                date=workout_data.date,
+                description=workout_data.description,
+                exercises=exercises_data
+            )
             return workout
         except NoResultFound:
             raise ObjectNotFoundException
@@ -50,8 +56,7 @@ class WorkoutsService(BaseService):
 
     async def add_exercises_to_workout(self, user_id, workout_id, exercise_to_workout):
         try:
-            workout = await self.db.workout_exercises.get_one(id=workout_id)
-            print(workout)
+            await self.db.workout_exercises.get_one(id=workout_id)
         except ObjectNotFoundException:
             raise ObjectNotFoundException(f"Тренировка с таким ID {workout_id} не найдена")
         workout = await self.db.workouts.get_one(id=workout_id)

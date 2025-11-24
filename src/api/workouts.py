@@ -19,8 +19,8 @@ async def get_all_my_workouts(db: DBDep, user: UserDep):
 @router.get("/get/{workout_id}", summary="Тренировка {workout_id}")
 async def get_workout(workout_id: int, db: DBDep, user: UserDep):
     try:
-        exercise = await WorkoutsService(db).get_workout(workout_id)
-        return exercise
+        workout = await WorkoutsService(db).get_workout(workout_id)
+        return workout
     except ObjectNotFoundException:
         raise HTTPException(status_code=404, detail="Не найдено такой тренировки")
 

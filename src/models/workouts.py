@@ -18,7 +18,7 @@ class WorkoutsModel(IDMixin, TimestampsMixin, Base):
 
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))
     date: Mapped[date]
-    description: Mapped[str] = mapped_column(String(500))
+    description: Mapped[str | None] = mapped_column(String(500))
     exercises: Mapped[list["ExercisesModel"]] = relationship(
         back_populates="workouts",
         secondary="workout_exercises",
