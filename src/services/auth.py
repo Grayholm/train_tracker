@@ -8,6 +8,7 @@ from passlib.context import CryptContext
 from pydantic import EmailStr
 
 from src.core.config import settings
+from src.core.db_manager import DBManager
 from src.core.tasks import send_confirmation_email
 from src.exceptions import (
     ObjectNotFoundException,
@@ -19,10 +20,15 @@ from src.services.base import BaseService
 
 
 class AuthService(BaseService):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, db: DBManager | None = None, serializer=None):
+        super().__init__(db=db)
         self.pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
-        self.serializer = URLSafeTimedSerializer(settings.secret_key.get_secret_value())
+        if serializer is not None:
+            self.serializer = serializer
+        else:
+            self.serializer = URLSafeTimedSerializer(
+                settings.secret_key.get_secret_value()
+            )
 
     def create_access_token(self, data: dict) -> str:
         logging.debug("Create access token")
