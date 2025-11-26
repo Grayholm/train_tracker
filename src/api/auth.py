@@ -163,9 +163,8 @@ async def logout(db: DBDep, response: Response, current_user=Depends(get_current
 async def change_email(db: DBDep, new_email: str, current_user=Depends(get_current_user)):
     try:
         old_email = current_user["user_email"]
-        user_id = current_user["user_id"]
         await AuthService(db).change_email(
-            new_email=new_email, old_email=old_email, user_id=user_id
+            new_email=new_email, old_email=old_email
         )
         return {"message": "На вашу новую почту отправлено письмо для подтверждения."}
     except ValueError as e:
@@ -193,11 +192,3 @@ async def change_password(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Произошла ошибка при изменении пароля",
         )
-
-def add(a, b):
-    return a + b
-
-def divide(a, b):
-    if b == 0:
-        raise ValueError("Cannot divide by zero")
-    return a / b

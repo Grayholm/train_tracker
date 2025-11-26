@@ -3,10 +3,13 @@ from unittest.mock import Mock, AsyncMock, patch
 import jwt
 import pytest
 from fastapi import HTTPException
+from itsdangerous import BadSignature
+from platformdirs import user_log_dir
+from sqlalchemy.testing.suite.test_reflection import users
 
 from src.core.config import settings
-from src.exceptions import ObjectNotFoundException, EmailIsAlreadyRegisteredException
-from src.schemas.users import UserRequest, Roles
+from src.exceptions import ObjectNotFoundException, EmailIsAlreadyRegisteredException, LoginErrorException
+from src.schemas.users import UserRequest, Roles, User
 from src.services.auth import AuthService
 
 
@@ -102,8 +105,6 @@ class TestAuthService:
 
     @pytest.mark.asyncio
     async def test_register_user_success(self):
-        # self.mock_db.users.add = AsyncMock()
-
         # Input
         data = UserRequest(email="test@example.com", password="123456")
 
@@ -173,3 +174,198 @@ class TestAuthService:
         # Assert
         self.mock_db.users.get_one.assert_called_once_with(email="test@example.com")
         assert isinstance(token, str)
+
+    @pytest.mark.asyncio
+    async def test_login_and_get_access_token_failure(self):
+        self.mock_db.users.get_one = AsyncMock(side_effect=ObjectNotFoundException)
+
+        data = UserRequest(email="fake@example.com", password="123456")
+
+        with pytest.raises(LoginErrorException):
+            await self.service.login_and_get_access_token(data)
+
+        self.mock_db.commit.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_login_with_wrong_password_raises_exception(self):
+        correct_password = "correct123"
+        hashed_password = self.service.hash_password(correct_password)
+
+        fake_user = Mock(
+            id=1,
+            email="test@example.com",
+            hashed_password=hashed_password,
+            role=Mock(value="user"),
+        )
+
+        self.mock_db.users.get_one = AsyncMock(return_value=fake_user)
+
+        data = UserRequest(email="test@example.com", password="wrongpassword")
+
+        # Act & Assert
+        with pytest.raises(LoginErrorException):
+            await self.service.login_and_get_access_token(data)
+
+        # commit не должен вызываться
+        self.mock_db.commit.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_get_one_or_none_user_success(self):
+        correct_password = "correct123"
+        hashed_password = self.service.hash_password(correct_password)
+
+        fake_user = Mock(
+            id=1,
+            email="test@example.com",
+            hashed_password=hashed_password,
+            role=Roles.USER.value,
+        )
+
+        self.service.get_one_or_none_user = AsyncMock(return_value=fake_user)
+
+        user = await self.service.get_one_or_none_user(user_id=1)
+
+        self.service.get_one_or_none_user.assert_called_once()
+        assert user.id == 1
+        assert user.hashed_password == hashed_password
+        assert user.role == Roles.USER.value
+        assert user.email == "test@example.com"
+
+    @pytest.mark.asyncio
+    async def test_get_one_or_none_user_failure(self):
+        self.service.get_one_or_none_user = AsyncMock(return_value=None)
+        user = await self.service.get_one_or_none_user(user_id=1)
+        self.service.get_one_or_none_user.assert_called_once()
+        assert user is None
+
+    @pytest.mark.asyncio
+    async def test_logout_success(self):
+        await self.service.logout(user_id=1)
+
+        self.mock_db.users.logout_is_active.assert_called_once_with(user_id=1)
+        self.mock_db.commit.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_confirm_user_success(self):
+        token = "tok123"
+        email = "test@example.com"
+
+        self.mock_serializer.loads.return_value = email
+
+        await self.service.confirm_user(token)
+
+        self.mock_serializer.loads.assert_called_once_with(token, max_age=3600)
+        self.mock_db.users.confirm_user.assert_called_once_with(email=email)
+        self.mock_db.commit.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_confirm_user_bad_signature(self):
+        token = "badtoken"
+
+        self.mock_serializer.loads.side_effect = BadSignature("badtoken")
+
+        with pytest.raises(BadSignature):
+            await self.service.confirm_user(token)
+
+        assert not self.mock_db.users.confirm_user.called
+        assert not self.mock_db.commit.called
+
+    @pytest.mark.asyncio
+    async def test_change_email_success(self):
+        old_email = "oldemail@example.com"
+        new_email = "newemail@example.com"
+
+        self.mock_db.users.get_one_or_none = AsyncMock(return_value=None)
+
+        with patch("src.core.tasks.send_confirmation_email.delay") as mock_email_delay:
+            await self.service.change_email(new_email, old_email)
+
+        self.mock_db.users.get_one_or_none.assert_called_once_with(email=new_email)
+        self.mock_serializer.dumps.assert_called_once_with(new_email)
+        mock_email_delay.assert_called_once_with(
+            to_email=new_email,
+            token="TOK123"
+        )
+        self.mock_db.users.change_email.assert_called_once_with(new_email, old_email)
+        self.mock_db.commit.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_change_email_existing_user_failure(self):
+        old_email = "oldemail@example.com"
+        new_email = "newemail@example.com"
+        fake_user = Mock(
+            id=1,
+            email="newemail@example.com",
+            hashed_password="hashed_password",
+            role=Roles.USER.value,
+        )
+
+        self.mock_db.users.get_one_or_none = AsyncMock(return_value=fake_user)
+        with pytest.raises(ValueError):
+            await self.service.change_email(new_email, old_email)
+
+        self.mock_db.users.get_one_or_none.assert_called_once_with(email=new_email)
+
+    @pytest.mark.asyncio
+    async def test_change_email_old_email_failure(self):
+        old_email = "oldemail@example.com"
+        new_email = "oldemail@example.com"
+        with pytest.raises(ValueError):
+            await self.service.change_email(new_email, old_email)
+
+    @pytest.mark.asyncio
+    async def test_change_password_success(self):
+        # Arrange
+        old_password = "oldpass123"
+        new_password = "newpass123"
+
+        # Генерируем реальный хэш для старого пароля
+        users_hashed_password = self.service.hash_password(old_password)
+
+        # Мокаем методы БД
+        self.mock_db.users.change_password = AsyncMock(return_value=None)
+
+        user_id = 10
+
+        # Act
+        await self.service.change_password(
+            old_password=old_password,
+            new_password=new_password,
+            users_hashed_password=users_hashed_password,
+            user_id=user_id
+        )
+
+        # Assert
+        # Проверяем, что change_password вызван с новым хэшем
+        self.mock_db.users.change_password.assert_called_once()
+        called_hash, called_id = self.mock_db.users.change_password.call_args[0]
+
+        assert called_id == user_id
+        assert called_hash != users_hashed_password  # хэш обновился
+        assert self.service.verify_password(new_password, called_hash) is True
+
+        self.mock_db.commit.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_change_password_wrong_old_password(self):
+        old_password = "oldpass123"
+        wrong_password = "WRONGpass"
+        new_password = "newpass123"
+
+        # Хэшируем правильный старый пароль
+        users_hashed_password = self.service.hash_password(old_password)
+
+        user_id = 10
+
+        # Act + Assert
+        with pytest.raises(ValueError, match="Неверный текущий пароль"):
+            await self.service.change_password(
+                old_password=wrong_password,
+                new_password=new_password,
+                users_hashed_password=users_hashed_password,
+                user_id=user_id
+            )
+
+        # Убедимся, что БД не трогалась
+        self.mock_db.users.change_password.assert_not_called()
+        self.mock_db.commit.assert_not_called()

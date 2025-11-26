@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, timezone, timedelta
+from typing import Optional
 
 import jwt
 from fastapi import HTTPException
@@ -15,7 +16,7 @@ from src.exceptions import (
     EmailIsAlreadyRegisteredException,
     LoginErrorException,
 )
-from src.schemas.users import UserRequest, UserAdd, Roles
+from src.schemas.users import UserRequest, UserAdd, Roles, User
 from src.services.base import BaseService
 
 
@@ -115,7 +116,7 @@ class AuthService(BaseService):
         logging.info(f"Login successful: {data.email}, user_id={user.id}")
         return token
 
-    async def get_one_or_none_user(self, user_id: int):
+    async def get_one_or_none_user(self, user_id: int) -> Optional[User]:
         return await self.db.users.get_one_or_none(id=user_id)
 
     async def logout(self, user_id: int):
@@ -131,7 +132,7 @@ class AuthService(BaseService):
         await self.db.users.confirm_user(email=email)
         await self.db.commit()
 
-    async def change_email(self, new_email: str, old_email: EmailStr, user_id: int):
+    async def change_email(self, new_email: str, old_email: EmailStr):
         if new_email == old_email:
             raise ValueError("Новый email совпадает с текущим")
 
