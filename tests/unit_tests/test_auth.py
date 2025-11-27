@@ -4,12 +4,10 @@ import jwt
 import pytest
 from fastapi import HTTPException
 from itsdangerous import BadSignature
-from platformdirs import user_log_dir
-from sqlalchemy.testing.suite.test_reflection import users
 
 from src.core.config import settings
 from src.exceptions import ObjectNotFoundException, EmailIsAlreadyRegisteredException, LoginErrorException
-from src.schemas.users import UserRequest, Roles, User
+from src.schemas.users import UserRequest, Roles
 from src.services.auth import AuthService
 
 
@@ -315,19 +313,15 @@ class TestAuthService:
 
     @pytest.mark.asyncio
     async def test_change_password_success(self):
-        # Arrange
         old_password = "oldpass123"
         new_password = "newpass123"
 
-        # Генерируем реальный хэш для старого пароля
         users_hashed_password = self.service.hash_password(old_password)
 
-        # Мокаем методы БД
         self.mock_db.users.change_password = AsyncMock(return_value=None)
 
         user_id = 10
 
-        # Act
         await self.service.change_password(
             old_password=old_password,
             new_password=new_password,
@@ -335,13 +329,11 @@ class TestAuthService:
             user_id=user_id
         )
 
-        # Assert
-        # Проверяем, что change_password вызван с новым хэшем
         self.mock_db.users.change_password.assert_called_once()
         called_hash, called_id = self.mock_db.users.change_password.call_args[0]
 
         assert called_id == user_id
-        assert called_hash != users_hashed_password  # хэш обновился
+        assert called_hash != users_hashed_password
         assert self.service.verify_password(new_password, called_hash) is True
 
         self.mock_db.commit.assert_called_once()
@@ -352,12 +344,10 @@ class TestAuthService:
         wrong_password = "WRONGpass"
         new_password = "newpass123"
 
-        # Хэшируем правильный старый пароль
         users_hashed_password = self.service.hash_password(old_password)
 
         user_id = 10
 
-        # Act + Assert
         with pytest.raises(ValueError, match="Неверный текущий пароль"):
             await self.service.change_password(
                 old_password=wrong_password,
@@ -366,6 +356,5 @@ class TestAuthService:
                 user_id=user_id
             )
 
-        # Убедимся, что БД не трогалась
         self.mock_db.users.change_password.assert_not_called()
         self.mock_db.commit.assert_not_called()
