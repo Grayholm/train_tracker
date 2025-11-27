@@ -43,8 +43,8 @@ class ExercisesService(BaseService):
             raise
 
     async def update_exercise(self, exercise_id: int, data_dict: dict, category: Category):
-        if not data_dict:
-            raise DataIsEmptyException("Отсутствуют данные для обновления")
+        if not data_dict["name"] or not data_dict["description"]:
+            raise DataIsEmptyException("Поле name или description пусто")
 
         try:
             await self.get_exercise(exercise_id)
