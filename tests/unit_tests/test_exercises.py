@@ -202,14 +202,87 @@ class TestExercisesService(BaseTestService):
         self.mock_db.exercises.update.assert_not_called()
         self.mock_db.commit.assert_not_called()
 
+    @pytest.mark.parametrize("name, description", [
+        ("Подтягивания", "Базовое упражнение на спину"),
+        ("Подтягивания", None),
+    ])
     @pytest.mark.asyncio
-    async def test_partially_update_exercise_success(self):
-        pass
+    async def test_partially_update_exercise_success(self, name, description):
+        # Arrange
+        exercise_id = 1
+        existing_obj = Exercise(
+            id=1,
+            name="Жим лежа",
+            description="Базовое упражнение",
+            category=Category.CHEST,
+        )
+        existing_obj_new = Exercise(
+            id=1,
+            name=name,
+            description=description,
+            category=Category.BACK,
+        )
+        exercise_example = {
+            "name": name,
+            "description": description
+        }
+        self.service.get_exercise = AsyncMock(return_value=existing_obj)
+        self.mock_db.exercises.update = AsyncMock(return_value=existing_obj_new)
+        self.mock_db.commit = AsyncMock()
+
+        # Act
+        exercise = await self.service.partially_update_exercise(exercise_id, exercise_example, Category.BACK)
+
+        # Assert
+        self.service.get_exercise.assert_called_once_with(exercise_id)
+        called_arg = self.mock_db.exercises.update.call_args[0][0]
+        assert called_arg.name == name
+        assert called_arg.description == description
+        assert called_arg.category == Category.BACK
+        self.mock_db.commit.assert_called_once()
+        assert exercise.name == name
+        assert exercise.description == description
+        assert exercise.category == Category.BACK
 
     @pytest.mark.asyncio
     async def test_partially_update_exercise_data_is_empty_failure(self):
-        pass
+        # Arrange
+        exercise_id = 1
+        exercise_example = {
+            "name": None,
+            "description": None
+        }
+        category = Category.BACK
+        self.service.get_exercise = AsyncMock()
+        self.mock_db.exercises.update = AsyncMock()
+        self.mock_db.commit = AsyncMock()
+
+        # Act
+        with pytest.raises(DataIsEmptyException):
+            await self.service.partially_update_exercise(exercise_id, exercise_example, category)
+
+        # Assert
+        self.service.get_exercise.assert_not_called()
+        self.mock_db.exercises.update.assert_not_called()
+        self.mock_db.commit.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_partially_update_exercise_obj_not_found_failure(self):
-        pass
+        # Arrange
+        exercise_id = 1
+        exercise_example = {
+            "name": "Подтягивания",
+            "description": "Базовое упражнение на спину"
+        }
+        self.service.get_exercise = AsyncMock(side_effect=ObjectNotFoundException)
+        self.mock_db.exercises.update = AsyncMock()
+        self.mock_db.commit = AsyncMock()
+
+        # Act = Assert
+        with pytest.raises(ObjectNotFoundException):
+            await self.service.partially_update_exercise(exercise_id, exercise_example, Category.BACK)
+
+        # Assert
+        self.service.get_exercise.assert_called_once_with(exercise_id)
+        self.mock_db.exercises.update.assert_not_called()
+        self.mock_db.commit.assert_not_called()

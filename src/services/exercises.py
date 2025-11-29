@@ -64,16 +64,16 @@ class ExercisesService(BaseService):
     async def partially_update_exercise(
         self, exercise_id: int, data_dict: dict, category: Category
     ):
-        if category is not None:
-            data_dict["category"] = category
-
-        if not data_dict:
+        if not data_dict or data_dict["name"] is None and data_dict["description"] is None:
             raise DataIsEmptyException("Отсутствуют данные для обновления")
 
         try:
             await self.get_exercise(exercise_id)
         except ObjectNotFoundException:
             raise
+
+        if category is not None:
+            data_dict["category"] = category
 
         data = ExerciseUpdate(**data_dict)
 
