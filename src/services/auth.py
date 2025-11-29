@@ -7,6 +7,7 @@ from fastapi import HTTPException
 from itsdangerous import URLSafeTimedSerializer, BadSignature
 from passlib.context import CryptContext
 from pydantic import EmailStr
+from sqlalchemy.exc import NoResultFound
 
 from src.core.config import settings
 from src.core.db_manager import DBManager
@@ -85,7 +86,7 @@ class AuthService(BaseService):
             return {
                 "message": "Вы успешно зарегистрировались! Проверьте почту, чтобы подтвердить свою учетную запись"
             }
-        except ObjectNotFoundException:
+        except NoResultFound:
             logging.warning(f"Пользователь ввел уже существующую почту, {new_user.email}")
             raise EmailIsAlreadyRegisteredException
 
@@ -93,7 +94,7 @@ class AuthService(BaseService):
         logging.info(f"Login and get access token for email: {data.email}")
         try:
             user = await self.db.users.get_one(email=data.email)
-        except ObjectNotFoundException:
+        except NoResultFound:
             logging.warning(f"Неверная почта или пароль для пользователя {data.email}")
             raise LoginErrorException
 

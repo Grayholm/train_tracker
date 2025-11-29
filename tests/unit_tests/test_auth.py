@@ -4,6 +4,7 @@ import jwt
 import pytest
 from fastapi import HTTPException
 from itsdangerous import BadSignature
+from sqlalchemy.exc import NoResultFound
 
 from src.core.config import settings
 from src.exceptions import ObjectNotFoundException, EmailIsAlreadyRegisteredException, LoginErrorException
@@ -114,7 +115,7 @@ class TestAuthService(BaseTestService):
     @pytest.mark.asyncio
     async def test_register_user_email_exists(self):
 
-        self.mock_db.users.add.side_effect = ObjectNotFoundException
+        self.mock_db.users.add.side_effect = NoResultFound
 
         data = UserRequest(email="test@example.com", password="123456")
 
@@ -148,7 +149,7 @@ class TestAuthService(BaseTestService):
 
     @pytest.mark.asyncio
     async def test_login_and_get_access_token_failure(self):
-        self.mock_db.users.get_one = AsyncMock(side_effect=ObjectNotFoundException)
+        self.mock_db.users.get_one = AsyncMock(side_effect=NoResultFound)
 
         data = UserRequest(email="fake@example.com", password="123456")
 

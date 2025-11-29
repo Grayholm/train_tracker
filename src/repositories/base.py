@@ -41,7 +41,7 @@ class BaseRepository:
         try:
             model = result.scalar_one()
         except NoResultFound:
-            raise ObjectNotFoundException
+            raise
         return self.mapper.map_to_domain_entity(model)
 
     async def add(self, data: BaseModel):
@@ -85,7 +85,7 @@ class BaseRepository:
             obj = result.scalar_one()
             edited = self.mapper.map_to_domain_entity(obj)
         except NoResultFound:
-            raise ObjectNotFoundException
+            raise
         except ValidationError:
             raise ValidationServiceError
         except IntegrityError:
@@ -101,6 +101,6 @@ class BaseRepository:
         result = await self.session.execute(delete_stmt)
 
         if filter and result.rowcount == 0:
-            raise ObjectNotFoundException
+            raise NoResultFound
 
         return True

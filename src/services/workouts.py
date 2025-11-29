@@ -37,7 +37,7 @@ class WorkoutsService(BaseService):
             exercise_id = exercise_data.id
             try:
                 await self.db.exercises.get_one(id=exercise_id)
-            except ObjectNotFoundException:
+            except NoResultFound:
                 raise ObjectNotFoundException(f"Exercise with id {exercise_id} not found")
         workout = WorkoutAdd(
             user_id=user_id,
@@ -60,11 +60,12 @@ class WorkoutsService(BaseService):
         return created_workout
 
     async def add_exercises_to_workout(self, user_id, workout_id, exercise_to_workout):
-        try:
-            await self.db.workout_exercises.get_one(id=workout_id)
-        except ObjectNotFoundException:
+        # Проверяем наличие самой тренировки (через workouts репозиторий)
+        workout = await self.db.workouts.get_one_or_none(id=workout_id)
+        if workout is None:
             raise ObjectNotFoundException(f"Тренировка с таким ID {workout_id} не найдена")
-        workout = await self.db.workouts.get_one(id=workout_id)
+
+        # Проверяем права доступа
         if user_id != workout.user_id:
             raise AccessDeniedException(f"Данная тренировка с ID {workout_id} не принадлежит вам")
 
@@ -87,18 +88,20 @@ class WorkoutsService(BaseService):
         try:
             await self.db.workouts.delete(id=workout_id)
             await self.db.commit()
-        except ObjectNotFoundException:
-            raise
+        except NoResultFound:
+            raise ObjectNotFoundException
 
     async def partially_update_workout(
         self, user_id: int, workout_id: int, workout: WorkoutUpdatePatch
     ):
         data_dict = workout.model_dump(exclude_unset=True) if workout else {}
         if not data_dict:
-            return DataIsEmptyException("Отсутствуют данные для обновления")
+            raise DataIsEmptyException("Отсутствуют данные для обновления")
         try:
             existed = await self.get_workout(workout_id)
         except ObjectNotFoundException:
+            # Если get_workout уже трансформирует NoResultFound в ObjectNotFoundException,
+            # пробрасываем дальше
             raise
 
         data = WorkoutUpdate(
@@ -108,14 +111,16 @@ class WorkoutsService(BaseService):
         )
 
         result = await self.db.workouts.update(data, id=workout_id)
-        for exercise_data in workout.exercises:
-            workout_exercise_data = WorkoutExerciseAdd(
-                workout_id=existed.id,
-                exercise_id=exercise_data.id,
-                sets=exercise_data.sets,
-                reps=exercise_data.reps,
-                weight=exercise_data.weight,
-            )
-            await self.db.workout_exercises.add(workout_exercise_data)
+        # Если в патче явно присутствует поле exercises (даже пустой список), обработаем его
+        if getattr(workout, "exercises", None) is not None:
+            for exercise_data in workout.exercises:
+                workout_exercise_data = WorkoutExerciseAdd(
+                    workout_id=existed.id,
+                    exercise_id=exercise_data.id,
+                    sets=exercise_data.sets,
+                    reps=exercise_data.reps,
+                    weight=exercise_data.weight,
+                )
+                await self.db.workout_exercises.add(workout_exercise_data)
         await self.db.commit()
         return result
