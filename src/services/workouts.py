@@ -60,12 +60,10 @@ class WorkoutsService(BaseService):
         return created_workout
 
     async def add_exercises_to_workout(self, user_id, workout_id, exercise_to_workout):
-        # Проверяем наличие самой тренировки (через workouts репозиторий)
         workout = await self.db.workouts.get_one_or_none(id=workout_id)
         if workout is None:
             raise ObjectNotFoundException(f"Тренировка с таким ID {workout_id} не найдена")
 
-        # Проверяем права доступа
         if user_id != workout.user_id:
             raise AccessDeniedException(f"Данная тренировка с ID {workout_id} не принадлежит вам")
 

@@ -5,7 +5,7 @@ from pydantic import BaseModel, ValidationError
 from sqlalchemy import select, insert, update, delete
 from sqlalchemy.exc import NoResultFound, IntegrityError
 
-from src.exceptions import ValidationServiceError, ObjectNotFoundException
+from src.exceptions import ObjectAlreadyExistsException, ValidationServiceError, ObjectNotFoundException
 from src.repositories.mappers.base import DataMapper
 
 
@@ -54,7 +54,7 @@ class BaseRepository:
         except IntegrityError as e:
             logging.exception(f"Ошибка добавления данных в БД, входные данные={data}")
             if isinstance(e.orig.__cause__, UniqueViolationError):
-                raise ObjectNotFoundException
+                raise ObjectAlreadyExistsException
             else:
                 logging.exception(f"Незнакомая ошибка, входные данные={data}")
                 raise e

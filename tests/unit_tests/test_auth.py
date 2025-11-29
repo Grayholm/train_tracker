@@ -7,7 +7,7 @@ from itsdangerous import BadSignature
 from sqlalchemy.exc import NoResultFound
 
 from src.core.config import settings
-from src.exceptions import ObjectNotFoundException, EmailIsAlreadyRegisteredException, LoginErrorException
+from src.exceptions import ObjectAlreadyExistsException, ObjectNotFoundException, EmailIsAlreadyRegisteredException, LoginErrorException
 from src.schemas.users import UserRequest, Roles
 from src.services.auth import AuthService
 from tests.base_test import BaseTestService
@@ -115,7 +115,7 @@ class TestAuthService(BaseTestService):
     @pytest.mark.asyncio
     async def test_register_user_email_exists(self):
 
-        self.mock_db.users.add.side_effect = NoResultFound
+        self.mock_db.users.add.side_effect = ObjectAlreadyExistsException
 
         data = UserRequest(email="test@example.com", password="123456")
 

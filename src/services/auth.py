@@ -13,6 +13,7 @@ from src.core.config import settings
 from src.core.db_manager import DBManager
 from src.core.tasks import send_confirmation_email
 from src.exceptions import (
+    ObjectAlreadyExistsException,
     ObjectNotFoundException,
     EmailIsAlreadyRegisteredException,
     LoginErrorException,
@@ -86,7 +87,7 @@ class AuthService(BaseService):
             return {
                 "message": "Вы успешно зарегистрировались! Проверьте почту, чтобы подтвердить свою учетную запись"
             }
-        except NoResultFound:
+        except ObjectAlreadyExistsException:
             logging.warning(f"Пользователь ввел уже существующую почту, {new_user.email}")
             raise EmailIsAlreadyRegisteredException
 
