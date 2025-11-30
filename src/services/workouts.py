@@ -95,11 +95,11 @@ class WorkoutsService(BaseService):
         data_dict = workout.model_dump(exclude_unset=True) if workout else {}
         if not data_dict:
             raise DataIsEmptyException("Отсутствуют данные для обновления")
+        if workout.description is None and workout.exercises is None or workout.exercises == []:
+            raise DataIsEmptyException("Отсутствуют данные для обновления")
         try:
             existed = await self.get_workout(workout_id)
         except ObjectNotFoundException:
-            # Если get_workout уже трансформирует NoResultFound в ObjectNotFoundException,
-            # пробрасываем дальше
             raise
 
         data = WorkoutUpdate(
@@ -109,7 +109,6 @@ class WorkoutsService(BaseService):
         )
 
         result = await self.db.workouts.update(data, id=workout_id)
-        # Если в патче явно присутствует поле exercises (даже пустой список), обработаем его
         if getattr(workout, "exercises", None) is not None:
             for exercise_data in workout.exercises:
                 workout_exercise_data = WorkoutExerciseAdd(
