@@ -6,7 +6,7 @@ from sqlalchemy.exc import NoResultFound
 from src.exceptions import ObjectNotFoundException, ObjectAlreadyExistsException, DataIsEmptyException
 from src.schemas.exercises import Category, Exercise, ExerciseUpdate
 from src.services.exercises import ExercisesService
-from tests.base_test import BaseTestService
+from tests.unit_tests.base_test import BaseTestService
 
 
 class TestExercisesService(BaseTestService):
@@ -16,14 +16,12 @@ class TestExercisesService(BaseTestService):
         super().setup_method()
         self.service = ExercisesService(db=self.mock_db)
 
-    @pytest.mark.asyncio
     async def test_get_exercises_success(self):
         self.mock_db.exercises.get_all = AsyncMock(return_value=[])
         exercises = await self.service.get_exercises()
         assert exercises == []
         self.mock_db.exercises.get_all.assert_called_once()
 
-    @pytest.mark.asyncio
     async def test_get_exercise_success(self):
         exercise_example = Mock(
             id=1,
@@ -36,7 +34,6 @@ class TestExercisesService(BaseTestService):
         assert exercise == exercise
         self.mock_db.exercises.get_one.assert_called_once_with(id=1)
 
-    @pytest.mark.asyncio
     async def test_get_exercise_failure(self):
         self.mock_db.exercises.get_one.side_effect = NoResultFound
 
@@ -45,7 +42,6 @@ class TestExercisesService(BaseTestService):
 
         self.mock_db.exercises.get_one.assert_called_once_with(id=1)
 
-    @pytest.mark.asyncio
     async def test_add_exercise_success(self):
         # Arrange
         exercise_example = {
@@ -77,7 +73,6 @@ class TestExercisesService(BaseTestService):
         assert exercise.description == "Базовое упражнение"
         assert exercise.category == Category.CHEST
 
-    @pytest.mark.asyncio
     async def test_add_exercise_failure(self):
         # Arrange
         exercise_example = {
@@ -101,14 +96,12 @@ class TestExercisesService(BaseTestService):
         self.mock_db.exercises.add.assert_not_called()
         self.mock_db.commit.assert_not_called()
 
-    @pytest.mark.asyncio
     async def test_delete_exercise_success(self):
         self.mock_db.exercises.delete = AsyncMock(return_value=True)
         await self.service.delete_exercise(1)
         self.mock_db.exercises.delete.assert_called_once()
         self.mock_db.commit.assert_called_once()
 
-    @pytest.mark.asyncio
     async def test_delete_exercise_failure(self):
         self.mock_db.exercises.delete.side_effect = ObjectNotFoundException
         with pytest.raises(ObjectNotFoundException):
@@ -116,7 +109,6 @@ class TestExercisesService(BaseTestService):
         self.mock_db.exercises.delete.assert_called_once_with(id=1)
         self.mock_db.commit.assert_not_called()
 
-    @pytest.mark.asyncio
     async def test_update_exercise_success(self):
         # Arrange
         exercise_id = 1
@@ -159,7 +151,6 @@ class TestExercisesService(BaseTestService):
         (None, "Базовое упражнение на спину"),
         (None, None)
     ])
-    @pytest.mark.asyncio
     async def test_update_exercise_data_is_empty_failure(self, name, description):
         # Arrange
         exercise_id = 1
@@ -180,7 +171,6 @@ class TestExercisesService(BaseTestService):
         self.mock_db.exercises.update.assert_not_called()
         self.mock_db.commit.assert_not_called()
 
-    @pytest.mark.asyncio
     async def test_update_exercise_obj_not_found_failure(self):
         # Arrange
         exercise_id = 1
@@ -206,7 +196,6 @@ class TestExercisesService(BaseTestService):
         ("Подтягивания", "Базовое упражнение на спину"),
         ("Подтягивания", None),
     ])
-    @pytest.mark.asyncio
     async def test_partially_update_exercise_success(self, name, description):
         # Arrange
         exercise_id = 1
@@ -244,7 +233,6 @@ class TestExercisesService(BaseTestService):
         assert exercise.description == description
         assert exercise.category == Category.BACK
 
-    @pytest.mark.asyncio
     async def test_partially_update_exercise_data_is_empty_failure(self):
         # Arrange
         exercise_id = 1
@@ -266,7 +254,6 @@ class TestExercisesService(BaseTestService):
         self.mock_db.exercises.update.assert_not_called()
         self.mock_db.commit.assert_not_called()
 
-    @pytest.mark.asyncio
     async def test_partially_update_exercise_obj_not_found_failure(self):
         # Arrange
         exercise_id = 1

@@ -10,7 +10,7 @@ from src.core.config import settings
 from src.exceptions import ObjectAlreadyExistsException, ObjectNotFoundException, EmailIsAlreadyRegisteredException, LoginErrorException
 from src.schemas.users import UserRequest, Roles
 from src.services.auth import AuthService
-from tests.base_test import BaseTestService
+from tests.unit_tests.base_test import BaseTestService
 
 
 class TestAuthService(BaseTestService):
@@ -92,7 +92,6 @@ class TestAuthService(BaseTestService):
         assert exc_info.value.status_code == 401
         assert "Неверная подпись" in exc_info.value.detail
 
-    @pytest.mark.asyncio
     async def test_register_user_success(self):
         data = UserRequest(email="test@example.com", password="123456")
 
@@ -112,7 +111,6 @@ class TestAuthService(BaseTestService):
 
         assert "успешно" in result["message"].lower()
 
-    @pytest.mark.asyncio
     async def test_register_user_email_exists(self):
 
         self.mock_db.users.add.side_effect = ObjectAlreadyExistsException
@@ -124,7 +122,6 @@ class TestAuthService(BaseTestService):
 
         self.mock_db.commit.assert_not_called()
 
-    @pytest.mark.asyncio
     async def test_login_and_get_access_token_success(self):
         # Arrange
         password = "123456"
@@ -147,7 +144,6 @@ class TestAuthService(BaseTestService):
         self.mock_db.users.get_one.assert_called_once_with(email="test@example.com")
         assert isinstance(token, str)
 
-    @pytest.mark.asyncio
     async def test_login_and_get_access_token_failure(self):
         self.mock_db.users.get_one = AsyncMock(side_effect=NoResultFound)
 
@@ -158,7 +154,6 @@ class TestAuthService(BaseTestService):
 
         self.mock_db.commit.assert_not_called()
 
-    @pytest.mark.asyncio
     async def test_login_with_wrong_password_raises_exception(self):
         correct_password = "correct123"
         hashed_password = self.service.hash_password(correct_password)
@@ -179,7 +174,6 @@ class TestAuthService(BaseTestService):
 
         self.mock_db.commit.assert_not_called()
 
-    @pytest.mark.asyncio
     async def test_get_one_or_none_user_success(self):
         correct_password = "correct123"
         hashed_password = self.service.hash_password(correct_password)
@@ -201,21 +195,18 @@ class TestAuthService(BaseTestService):
         assert user.role == Roles.USER.value
         assert user.email == "test@example.com"
 
-    @pytest.mark.asyncio
     async def test_get_one_or_none_user_failure(self):
         self.service.get_one_or_none_user = AsyncMock(return_value=None)
         user = await self.service.get_one_or_none_user(user_id=1)
         self.service.get_one_or_none_user.assert_called_once()
         assert user is None
 
-    @pytest.mark.asyncio
     async def test_logout_success(self):
         await self.service.logout(user_id=1)
 
         self.mock_db.users.logout_is_active.assert_called_once_with(user_id=1)
         self.mock_db.commit.assert_called_once()
 
-    @pytest.mark.asyncio
     async def test_confirm_user_success(self):
         token = "tok123"
         email = "test@example.com"
@@ -228,7 +219,6 @@ class TestAuthService(BaseTestService):
         self.mock_db.users.confirm_user.assert_called_once_with(email=email)
         self.mock_db.commit.assert_called_once()
 
-    @pytest.mark.asyncio
     async def test_confirm_user_bad_signature(self):
         token = "badtoken"
 
@@ -240,7 +230,6 @@ class TestAuthService(BaseTestService):
         assert not self.mock_db.users.confirm_user.called
         assert not self.mock_db.commit.called
 
-    @pytest.mark.asyncio
     async def test_change_email_success(self):
         old_email = "oldemail@example.com"
         new_email = "newemail@example.com"
@@ -259,7 +248,6 @@ class TestAuthService(BaseTestService):
         self.mock_db.users.change_email.assert_called_once_with(new_email, old_email)
         self.mock_db.commit.assert_called_once()
 
-    @pytest.mark.asyncio
     async def test_change_email_existing_user_failure(self):
         old_email = "oldemail@example.com"
         new_email = "newemail@example.com"
@@ -276,14 +264,12 @@ class TestAuthService(BaseTestService):
 
         self.mock_db.users.get_one_or_none.assert_called_once_with(email=new_email)
 
-    @pytest.mark.asyncio
     async def test_change_email_old_email_failure(self):
         old_email = "oldemail@example.com"
         new_email = "oldemail@example.com"
         with pytest.raises(ValueError):
             await self.service.change_email(new_email, old_email)
 
-    @pytest.mark.asyncio
     async def test_change_password_success(self):
         old_password = "oldpass123"
         new_password = "newpass123"
@@ -310,7 +296,6 @@ class TestAuthService(BaseTestService):
 
         self.mock_db.commit.assert_called_once()
 
-    @pytest.mark.asyncio
     async def test_change_password_wrong_old_password(self):
         old_password = "oldpass123"
         wrong_password = "WRONGpass"

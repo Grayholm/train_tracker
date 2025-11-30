@@ -1,14 +1,14 @@
 import datetime
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock
 from sqlalchemy.exc import NoResultFound
 
 import pytest
 
 from src.exceptions import AccessDeniedException, DataIsEmptyException, ObjectNotFoundException
 from src.schemas.exercises import Exercise, Category
-from src.schemas.workouts import WorkoutAdd, WorkoutExercise, Workout, ExerciseToAdd, WorkoutExerciseAdd, WorkoutRequest, WorkoutUpdatePatch
+from src.schemas.workouts import WorkoutAdd, WorkoutExercise, Workout, ExerciseToAdd, WorkoutRequest, WorkoutUpdatePatch
 from src.services.workouts import WorkoutsService
-from tests.base_test import BaseTestService
+from tests.unit_tests.base_test import BaseTestService
 
 
 class TestWorkoutsService(BaseTestService):
@@ -18,7 +18,6 @@ class TestWorkoutsService(BaseTestService):
         super().setup_method()
         self.service = WorkoutsService(db=self.mock_db)
 
-    @pytest.mark.asyncio
     async def test_get_workouts(self):
         # Arrange
         user_id = 12
@@ -31,7 +30,6 @@ class TestWorkoutsService(BaseTestService):
         assert workouts == []
         self.mock_db.workouts.get_filtered.assert_called_once_with(user_id=user_id)
 
-    @pytest.mark.asyncio
     async def test_get_workout_success(self):
         # Arrange
         workout_id = 12
@@ -63,7 +61,6 @@ class TestWorkoutsService(BaseTestService):
         assert workout.description == "Базовое упражнение"
         assert workout.exercises == [workouts_exercise_example]
 
-    @pytest.mark.asyncio
     async def test_get_workout_obj_not_found_failure(self):
         # Arrange
         self.mock_db.workouts.get_one = AsyncMock(side_effect=NoResultFound)
@@ -77,7 +74,6 @@ class TestWorkoutsService(BaseTestService):
         self.mock_db.workouts.get_one.assert_called_once_with(id=123)
         self.mock_db.workout_exercises.get_filtered.assert_not_called()
 
-    @pytest.mark.asyncio
     async def test_add_workout_success(self):
         # Arrange
         user_id = 5555
@@ -137,7 +133,6 @@ class TestWorkoutsService(BaseTestService):
 
         self.mock_db.commit.assert_called_once()
 
-    @pytest.mark.asyncio
     async def test_add_workout_obj_not_found_failure(self):
         # Arrange
         exercise_for_workouts_example = ExerciseToAdd(
@@ -160,7 +155,6 @@ class TestWorkoutsService(BaseTestService):
         # Assert
         self.mock_db.exercises.get_one.assert_called_once_with(id=1)
 
-    @pytest.mark.asyncio
     async def test_add_exercises_to_workout_success(self):
         # Arrange
         user_id = 5555
@@ -192,7 +186,6 @@ class TestWorkoutsService(BaseTestService):
         self.mock_db.workout_exercises.add.assert_called_once()
         self.mock_db.commit.assert_called_once()
 
-    @pytest.mark.asyncio
     async def test_add_exercises_to_workout_obj_not_found_failure(self):
         # Arrange
         user_id = 5555
@@ -220,7 +213,6 @@ class TestWorkoutsService(BaseTestService):
         self.mock_db.workout_exercises.add.assert_not_called()
         self.mock_db.commit.assert_not_called()
 
-    @pytest.mark.asyncio
     async def test_add_exercises_to_workout_access_denied_failure(self):
         # Arrange
         user_id = 12
@@ -253,7 +245,6 @@ class TestWorkoutsService(BaseTestService):
         self.mock_db.workout_exercises.add.assert_not_called()
         self.mock_db.commit.assert_not_called()
 
-    @pytest.mark.asyncio
     async def test_delete_workout(self):
         # Arrange
         user_id = 5555
@@ -276,7 +267,6 @@ class TestWorkoutsService(BaseTestService):
         self.mock_db.workouts.delete.assert_called_once_with(id=workout_id)
         self.mock_db.commit.assert_called_once()
 
-    @pytest.mark.asyncio
     async def test_delete_workout_obj_not_found_failure(self):
         # Arrange
         user_id = 5555
@@ -351,7 +341,6 @@ class TestWorkoutsService(BaseTestService):
             ),
         ],
     )
-    @pytest.mark.asyncio
     async def test_partially_update_workout_success(
         self,
         date,
@@ -443,7 +432,6 @@ class TestWorkoutsService(BaseTestService):
             ),
         ],
     )
-    @pytest.mark.asyncio
     async def test_partially_update_workout_obj_not_found_failure(
         self, date, description, exercises
     ):
@@ -481,7 +469,6 @@ class TestWorkoutsService(BaseTestService):
             (None, []),
         ],
     )
-    @pytest.mark.asyncio
     async def test_partially_update_workout_data_is_empty_failure(
         self, description, exercises
     ):
