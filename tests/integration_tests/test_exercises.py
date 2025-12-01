@@ -128,3 +128,41 @@ async def test_partially_update_exercise(admin_ac, name, description, exercise_i
         partially_updated_exercise = partial_update_response.json()
         assert partially_updated_exercise["name"] == name
         assert partially_updated_exercise["description"] == description
+
+async def test_add_exercise_no_admin(authenticated_ac):
+    response = await authenticated_ac.post(
+        f"/exercises?category=legs",
+        json={
+            "name": "Приседания",
+            "description": "Базовое упражнение приседания",
+        },
+    )
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Вы не админ"
+
+async def test_delete_exercise_no_admin(authenticated_ac):
+    response = await authenticated_ac.delete(f"/exercises/1")
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Вы не админ"
+
+async def test_update_exercise_no_admin(authenticated_ac):
+    response = await authenticated_ac.put(
+        f"/exercises/1?category=legs",
+        json={
+            "name": "Новое имя",
+            "description": "Новое описание",
+        },
+    )
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Вы не админ"
+
+async def test_partially_update_exercise_no_admin(authenticated_ac):
+    response = await authenticated_ac.patch(
+        f"/exercises/1?category=legs",
+        json={
+            "name": "Новое имя",
+            "description": "Новое описание",
+        },
+    )
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Вы не админ"
