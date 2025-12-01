@@ -16,7 +16,7 @@ class ExercisesModel(IDMixin, TimestampsMixin, Base):
     __tablename__ = "exercises"
 
     name: Mapped[str] = mapped_column(String(100))
-    description: Mapped[str] = mapped_column(String(500))
+    description: Mapped[str | None] = mapped_column(String(500))
     category: Mapped[Category] = mapped_column(Enum(Category))
 
     workouts: Mapped[list["WorkoutsModel"]] = relationship(

@@ -73,6 +73,7 @@ async def test_get_me(authenticated_ac):
     assert response.status_code == 200
     assert "email" in response.json()
     assert "id" in response.json()
+    print(response.json())
 
 
 async def test_logout(authenticated_ac):

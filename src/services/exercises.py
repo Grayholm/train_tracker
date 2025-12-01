@@ -40,7 +40,7 @@ class ExercisesService(BaseService):
             await self.db.exercises.delete(id=exercise_id)
             await self.db.commit()
         except NoResultFound:
-            raise
+            raise ObjectNotFoundException
 
     async def update_exercise(self, exercise_id: int, data_dict: dict, category: Category):
         if not data_dict["name"] or not data_dict["description"]:
