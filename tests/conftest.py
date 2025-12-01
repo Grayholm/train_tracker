@@ -41,36 +41,38 @@ async def setup_database(check_test_mode):
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
-@pytest.fixture(scope="session")
+@pytest.fixture(autouse=True)
 async def ac():
     # Инициализируем кэширующий бэкенд для тестов до создания клиента
     FastAPICache.init(InMemoryBackend(), prefix="test-cache")
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
 
-@pytest.fixture(scope="session")
-async def authenticated_ac(ac):
+@pytest.fixture()
+async def authenticated_ac():
     """Возвращает залогиненного USER клиента"""
+    client = AsyncClient(transport=ASGITransport(app=app), base_url="http://test")
     email = "testuser@example.com"
     password = "testpassword123"
     with patch("src.services.auth.send_confirmation_email.delay") as mock_delay:
         mock_delay.return_value = None
-        await ac.post("/auth/register", json={"email": email, "password": password})
+        await client.post("/auth/register", json={"email": email, "password": password})
     
-    response = await ac.post("/auth/login", json={"email": email, "password": password})
+    response = await client.post("/auth/login", json={"email": email, "password": password})
     assert response.status_code == 200
-    assert ac.cookies.get("access_token") is not None
+    assert client.cookies.get("access_token") is not None
     
-    return ac
+    return client
 
 @pytest.fixture(scope="session")
-async def admin_ac(ac):
+async def admin_ac():
     """Возвращает залогиненного ADMIN клиента"""
+    client = AsyncClient(transport=ASGITransport(app=app), base_url="http://test")
     email = "admin@example.com"
     password = "adminpass123"
     with patch("src.services.auth.send_confirmation_email.delay") as mock_delay:
         mock_delay.return_value = None
-        await ac.post("/auth/register", json={"email": email, "password": password})
+        await client.post("/auth/register", json={"email": email, "password": password})
     
     # Меняем роль в БД
     async with DBManager(session_factory=async_session_maker) as db:
@@ -79,8 +81,8 @@ async def admin_ac(ac):
         await db.session.commit()
     
     # Теперь логинимся с админской ролью
-    response = await ac.post("/auth/login", json={"email": email, "password": password})
+    response = await client.post("/auth/login", json={"email": email, "password": password})
     assert response.status_code == 200
-    assert ac.cookies.get("access_token") is not None
+    assert client.cookies.get("access_token") is not None
     
-    return ac
+    return client

@@ -50,7 +50,7 @@ class TestWorkoutsService(BaseTestService):
         self.mock_db.workout_exercises.get_filtered = AsyncMock(return_value=[workouts_exercise_example])
 
         # Act
-        workout = await self.service.get_workout(workout_id)
+        workout = await self.service.get_workout(user_id=32, workout_id=workout_id)
 
         # Assert
         self.mock_db.workouts.get_one.assert_called_once_with(id=workout_id)
@@ -68,10 +68,29 @@ class TestWorkoutsService(BaseTestService):
 
         # Act
         with pytest.raises(ObjectNotFoundException):
-            await self.service.get_workout(123)
+            await self.service.get_workout(user_id=5, workout_id=123)
 
         # Assert
         self.mock_db.workouts.get_one.assert_called_once_with(id=123)
+        self.mock_db.workout_exercises.get_filtered.assert_not_called()
+
+    async def test_get_workout_access_denied_failure(self):
+        # Arrange
+        workout_example = Workout(
+            id=12,
+            user_id=32,
+            date=datetime.date(2025, 2, 2),
+            description="Базовое упражнение",
+        )
+        self.mock_db.workouts.get_one = AsyncMock(return_value=workout_example)
+        self.mock_db.workout_exercises.get_filtered = AsyncMock()
+
+        # Act
+        with pytest.raises(AccessDeniedException):
+            await self.service.get_workout(user_id=5, workout_id=12)
+
+        # Assert
+        self.mock_db.workouts.get_one.assert_called_once_with(id=12)
         self.mock_db.workout_exercises.get_filtered.assert_not_called()
 
     async def test_add_workout_success(self):

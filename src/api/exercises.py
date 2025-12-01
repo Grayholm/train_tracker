@@ -65,7 +65,7 @@ async def delete_exercise(exercise_id: int, db: DBDep, user: UserDep):
 
     try:
         await ExercisesService(db).delete_exercise(exercise_id)
-        return HTTPException(
+        raise HTTPException(
             status_code=200, detail=f"Упражнение с ID={exercise_id} успешно удален"
         )
     except ObjectNotFoundException:

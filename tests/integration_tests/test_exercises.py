@@ -141,7 +141,7 @@ async def test_add_exercise_no_admin(authenticated_ac):
     assert response.json()["detail"] == "Вы не админ"
 
 async def test_delete_exercise_no_admin(authenticated_ac):
-    response = await authenticated_ac.delete(f"/exercises/1")
+    response = await authenticated_ac.delete(f"/exercises/2")
     assert response.status_code == 403
     assert response.json()["detail"] == "Вы не админ"
 

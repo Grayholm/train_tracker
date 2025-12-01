@@ -17,9 +17,12 @@ class WorkoutsService(BaseService):
         workouts = await self.db.workouts.get_filtered(user_id=user_id)
         return workouts
 
-    async def get_workout(self, workout_id):
+    async def get_workout(self, user_id, workout_id):
+
         try:
             workout_data = await self.db.workouts.get_one(id=workout_id)
+            if workout_data.user_id != user_id:
+                raise AccessDeniedException(f"Данная тренировка с ID {workout_id} не принадлежит вам")
             exercises_data = await self.db.workout_exercises.get_filtered(workout_id=workout_id)
             workout = WorkoutToResponse(
                 id=workout_id,

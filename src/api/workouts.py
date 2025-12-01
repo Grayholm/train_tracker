@@ -17,11 +17,14 @@ async def get_all_my_workouts(db: DBDep, user: UserDep):
 
 @router.get("/get/{workout_id}", summary="Тренировка {workout_id}")
 async def get_workout(workout_id: int, db: DBDep, user: UserDep):
+    user_id = user["user_id"]
     try:
-        workout = await WorkoutsService(db).get_workout(workout_id)
+        workout = await WorkoutsService(db).get_workout(user_id, workout_id)
         return workout
     except ObjectNotFoundException:
         raise HTTPException(status_code=404, detail="Не найдено такой тренировки")
+    except AccessDeniedException as e:
+        raise HTTPException(status_code=403, detail=str(e))
 
 
 @router.post("")
@@ -39,9 +42,7 @@ async def delete_workout(workout_id: int, db: DBDep, user: UserDep):
     user_id = user["user_id"]
     try:
         await WorkoutsService(db).delete_workout(user_id, workout_id)
-        return HTTPException(
-            status_code=200, detail=f"Тренировка с ID={workout_id} успешно удалена"
-        )
+        raise {"message": f"Тренировка с ID={workout_id} успешно удалена"}
     except ObjectNotFoundException:
         raise HTTPException(
             status_code=404,
@@ -56,7 +57,7 @@ async def partially_update_workout(
     user_id = user["user_id"]
     try:
         result = await WorkoutsService(db).partially_update_workout(user_id, workout_id, workout)
-        return HTTPException(status_code=200, detail=result)
+        raise {"message": result}
     except DataIsEmptyException:
         raise HTTPException(status_code=403, detail="Данные не могут быть пусты")
     except ObjectNotFoundException:
