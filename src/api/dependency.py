@@ -14,7 +14,7 @@ async def get_db():
         yield db
 
 
-DBDep: type[DBManager] = Annotated[DBManager, Depends(get_db)]
+DBDep = Annotated[DBManager, Depends(get_db)]
 
 
 def get_token(request: Request) -> str:
@@ -36,7 +36,7 @@ def get_current_user(token=Depends(get_token)) -> dict:
     return data
 
 
-UserDep: type[dict] = Annotated[dict, Depends(get_current_user)]
+UserDep = Annotated[dict, Depends(get_current_user)]
 
 
 def check_is_admin(user: UserDep):

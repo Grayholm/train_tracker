@@ -1,5 +1,6 @@
 #type: noqa: F401
 
+from unittest.mock import patch
 import pytest
 from httpx import ASGITransport, AsyncClient
 
@@ -15,14 +16,20 @@ from src.models import (
 )
 
 
+@pytest.fixture(scope="session", autouse=True)
+async def check_test_mode():
+    assert settings.MODE == "TEST"
+
 @pytest.fixture()
 async def db():
     async with DBManager(session_factory=async_session_maker) as db:
         yield db
 
-@pytest.fixture(scope="session", autouse=True)
-async def check_test_mode():
-    assert settings.MODE == "TEST"
+@pytest.fixture()
+def patch_celery_delay():
+    with patch("src.services.auth.send_confirmation_email.delay") as mock_delay:
+        mock_delay.return_value = None
+        yield mock_delay
 
 @pytest.fixture(scope="session", autouse=True)
 async def setup_database(check_test_mode):
@@ -35,8 +42,8 @@ async def ac():
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
 
-@pytest.fixture(scope="session")
-async def authenticated_ac(ac):
+@pytest.fixture()
+async def authenticated_ac(ac, patch_celery_delay):
     """Возвращает залогиненного клиента с установленным access_token"""
     # Регистрируемся
     email = "testuser@example.com"
