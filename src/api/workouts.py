@@ -42,7 +42,7 @@ async def delete_workout(workout_id: int, db: DBDep, user: UserDep):
     user_id = user["user_id"]
     try:
         await WorkoutsService(db).delete_workout(user_id, workout_id)
-        raise {"message": f"Тренировка с ID={workout_id} успешно удалена"}
+        return {"message": f"Тренировка с ID={workout_id} успешно удалена"}
     except ObjectNotFoundException:
         raise HTTPException(
             status_code=404,
@@ -57,7 +57,7 @@ async def partially_update_workout(
     user_id = user["user_id"]
     try:
         result = await WorkoutsService(db).partially_update_workout(user_id, workout_id, workout)
-        raise {"message": result}
+        return {"message": result}
     except DataIsEmptyException:
         raise HTTPException(status_code=403, detail="Данные не могут быть пусты")
     except ObjectNotFoundException:
